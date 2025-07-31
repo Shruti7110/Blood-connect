@@ -202,6 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(familyWithDetails);
     } catch (error) {
+      console.error("Error fetching donor family:", error);
       res.status(500).json({ message: "Failed to fetch donor family" });
     }
   });

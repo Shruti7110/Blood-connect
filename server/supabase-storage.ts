@@ -1,6 +1,6 @@
-
+import { type User, type InsertUser, type Patient, type InsertPatient, type Donor, type InsertDonor, type HealthcareProvider, type InsertHealthcareProvider, type Transfusion, type InsertTransfusion, type Notification, type InsertNotification, type EmergencyRequest, type InsertEmergencyRequest, type DonorFamily } from "@shared/schema";
 import { supabase } from './supabase';
-import { type IStorage, type User, type InsertUser, type Patient, type InsertPatient, type Donor, type InsertDonor, type HealthcareProvider, type InsertHealthcareProvider, type Transfusion, type InsertTransfusion, type Notification, type InsertNotification, type EmergencyRequest, type InsertEmergencyRequest, type DonorFamily } from './storage';
+import { IStorage } from './storage';
 
 export class SupabaseStorage implements IStorage {
   // User methods
@@ -11,11 +11,8 @@ export class SupabaseStorage implements IStorage {
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching user:', error);
-      return undefined;
-    }
-    return data as User;
+    if (error || !data) return undefined;
+    return data;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -25,40 +22,31 @@ export class SupabaseStorage implements IStorage {
       .eq('email', email)
       .single();
 
-    if (error) {
-      console.error('Error fetching user by email:', error);
-      return undefined;
-    }
-    return data as User;
+    if (error || !data) return undefined;
+    return data;
   }
 
-  async createUser(userData: InsertUser): Promise<User> {
+  async createUser(user: InsertUser): Promise<User> {
     const { data, error } = await supabase
       .from('users')
-      .insert(userData)
+      .insert(user)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating user:', error);
-      throw new Error('Failed to create user');
-    }
-    return data as User;
+    if (error || !data) throw new Error('Failed to create user');
+    return data;
   }
 
-  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+  async updateUser(id: string, user: Partial<User>): Promise<User | undefined> {
     const { data, error } = await supabase
       .from('users')
-      .update(updates)
+      .update(user)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating user:', error);
-      return undefined;
-    }
-    return data as User;
+    if (error || !data) return undefined;
+    return data;
   }
 
   // Patient methods
@@ -69,11 +57,8 @@ export class SupabaseStorage implements IStorage {
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching patient:', error);
-      return undefined;
-    }
-    return data as Patient;
+    if (error || !data) return undefined;
+    return data;
   }
 
   async getPatientByUserId(userId: string): Promise<Patient | undefined> {
@@ -83,40 +68,31 @@ export class SupabaseStorage implements IStorage {
       .eq('user_id', userId)
       .single();
 
-    if (error) {
-      console.error('Error fetching patient by user ID:', error);
-      return undefined;
-    }
-    return data as Patient;
+    if (error || !data) return undefined;
+    return data;
   }
 
-  async createPatient(patientData: InsertPatient): Promise<Patient> {
+  async createPatient(patient: InsertPatient): Promise<Patient> {
     const { data, error } = await supabase
       .from('patients')
-      .insert(patientData)
+      .insert(patient)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating patient:', error);
-      throw new Error('Failed to create patient');
-    }
-    return data as Patient;
+    if (error || !data) throw new Error('Failed to create patient');
+    return data;
   }
 
-  async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient | undefined> {
+  async updatePatient(id: string, patient: Partial<Patient>): Promise<Patient | undefined> {
     const { data, error } = await supabase
       .from('patients')
-      .update(updates)
+      .update(patient)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating patient:', error);
-      return undefined;
-    }
-    return data as Patient;
+    if (error || !data) return undefined;
+    return data;
   }
 
   async getPatients(): Promise<Patient[]> {
@@ -124,11 +100,8 @@ export class SupabaseStorage implements IStorage {
       .from('patients')
       .select('*');
 
-    if (error) {
-      console.error('Error fetching patients:', error);
-      return [];
-    }
-    return data as Patient[];
+    if (error) return [];
+    return data || [];
   }
 
   // Donor methods
@@ -139,11 +112,8 @@ export class SupabaseStorage implements IStorage {
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching donor:', error);
-      return undefined;
-    }
-    return data as Donor;
+    if (error || !data) return undefined;
+    return data;
   }
 
   async getDonorByUserId(userId: string): Promise<Donor | undefined> {
@@ -153,73 +123,92 @@ export class SupabaseStorage implements IStorage {
       .eq('user_id', userId)
       .single();
 
-    if (error) {
-      console.error('Error fetching donor by user ID:', error);
-      return undefined;
-    }
-    return data as Donor;
+    if (error || !data) return undefined;
+    return data;
   }
 
-  async createDonor(donorData: InsertDonor): Promise<Donor> {
+  async createDonor(donor: InsertDonor): Promise<Donor> {
     const { data, error } = await supabase
       .from('donors')
-      .insert(donorData)
+      .insert(donor)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating donor:', error);
-      throw new Error('Failed to create donor');
-    }
-    return data as Donor;
+    if (error || !data) throw new Error('Failed to create donor');
+    return data;
   }
 
-  async updateDonor(id: string, updates: Partial<Donor>): Promise<Donor | undefined> {
+  async updateDonor(id: string, donor: Partial<Donor>): Promise<Donor | undefined> {
     const { data, error } = await supabase
       .from('donors')
-      .update(updates)
+      .update(donor)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating donor:', error);
-      return undefined;
-    }
-    return data as Donor;
+    if (error || !data) return undefined;
+    return data;
   }
 
   async getDonorsByBloodGroup(bloodGroup: string): Promise<Donor[]> {
+    // Get compatible blood types for the patient's blood group
+    const compatibleTypes = this.getCompatibleDonorBloodTypes(bloodGroup);
+
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id')
+      .in('blood_group', compatibleTypes)
+      .eq('role', 'donor');
+
+    if (usersError || !users) return [];
+
+    const userIds = users.map(u => u.id);
+
     const { data, error } = await supabase
       .from('donors')
-      .select(`
-        *,
-        users!inner(*)
-      `)
-      .eq('users.blood_group', bloodGroup);
+      .select('*')
+      .in('user_id', userIds);
 
-    if (error) {
-      console.error('Error fetching donors by blood group:', error);
-      return [];
-    }
-    return data as Donor[];
+    if (error) return [];
+    return data || [];
   }
 
   async getAvailableDonors(bloodGroup: string, location?: string): Promise<Donor[]> {
-    const { data, error } = await supabase
+    const compatibleTypes = this.getCompatibleDonorBloodTypes(bloodGroup);
+
+    let query = supabase
       .from('donors')
       .select(`
         *,
-        users!inner(*)
+        users!inner(id, blood_group, location, role)
       `)
+      .eq('users.role', 'donor')
       .eq('available_for_donation', true)
-      .eq('users.blood_group', bloodGroup);
+      .in('users.blood_group', compatibleTypes);
 
-    if (error) {
-      console.error('Error fetching available donors:', error);
-      return [];
+    if (location) {
+      query = query.eq('users.location', location);
     }
-    return data as Donor[];
+
+    const { data, error } = await query;
+
+    if (error) return [];
+    return data || [];
+  }
+
+  private getCompatibleDonorBloodTypes(patientBloodGroup: string): string[] {
+    const compatibility: Record<string, string[]> = {
+      'O-': ['O-'],
+      'O+': ['O-', 'O+'],
+      'A-': ['O-', 'A-'],
+      'A+': ['O-', 'O+', 'A-', 'A+'],
+      'B-': ['O-', 'B-'],
+      'B+': ['O-', 'O+', 'B-', 'B+'],
+      'AB-': ['O-', 'A-', 'B-', 'AB-'],
+      'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+    };
+
+    return compatibility[patientBloodGroup] || [];
   }
 
   // Healthcare Provider methods
@@ -230,11 +219,8 @@ export class SupabaseStorage implements IStorage {
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching healthcare provider:', error);
-      return undefined;
-    }
-    return data as HealthcareProvider;
+    if (error || !data) return undefined;
+    return data;
   }
 
   async getHealthcareProviderByUserId(userId: string): Promise<HealthcareProvider | undefined> {
@@ -244,40 +230,31 @@ export class SupabaseStorage implements IStorage {
       .eq('user_id', userId)
       .single();
 
-    if (error) {
-      console.error('Error fetching healthcare provider by user ID:', error);
-      return undefined;
-    }
-    return data as HealthcareProvider;
+    if (error || !data) return undefined;
+    return data;
   }
 
-  async createHealthcareProvider(providerData: InsertHealthcareProvider): Promise<HealthcareProvider> {
+  async createHealthcareProvider(provider: InsertHealthcareProvider): Promise<HealthcareProvider> {
     const { data, error } = await supabase
       .from('healthcare_providers')
-      .insert(providerData)
+      .insert(provider)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating healthcare provider:', error);
-      throw new Error('Failed to create healthcare provider');
-    }
-    return data as HealthcareProvider;
+    if (error || !data) throw new Error('Failed to create healthcare provider');
+    return data;
   }
 
-  async updateHealthcareProvider(id: string, updates: Partial<HealthcareProvider>): Promise<HealthcareProvider | undefined> {
+  async updateHealthcareProvider(id: string, provider: Partial<HealthcareProvider>): Promise<HealthcareProvider | undefined> {
     const { data, error } = await supabase
       .from('healthcare_providers')
-      .update(updates)
+      .update(provider)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating healthcare provider:', error);
-      return undefined;
-    }
-    return data as HealthcareProvider;
+    if (error || !data) return undefined;
+    return data;
   }
 
   // Transfusion methods
@@ -288,40 +265,31 @@ export class SupabaseStorage implements IStorage {
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching transfusion:', error);
-      return undefined;
-    }
-    return data as Transfusion;
+    if (error || !data) return undefined;
+    return data;
   }
 
-  async createTransfusion(transfusionData: InsertTransfusion): Promise<Transfusion> {
+  async createTransfusion(transfusion: InsertTransfusion): Promise<Transfusion> {
     const { data, error } = await supabase
       .from('transfusions')
-      .insert(transfusionData)
+      .insert(transfusion)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating transfusion:', error);
-      throw new Error('Failed to create transfusion');
-    }
-    return data as Transfusion;
+    if (error || !data) throw new Error('Failed to create transfusion');
+    return data;
   }
 
-  async updateTransfusion(id: string, updates: Partial<Transfusion>): Promise<Transfusion | undefined> {
+  async updateTransfusion(id: string, transfusion: Partial<Transfusion>): Promise<Transfusion | undefined> {
     const { data, error } = await supabase
       .from('transfusions')
-      .update(updates)
+      .update(transfusion)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating transfusion:', error);
-      return undefined;
-    }
-    return data as Transfusion;
+    if (error || !data) return undefined;
+    return data;
   }
 
   async getTransfusionsByPatient(patientId: string): Promise<Transfusion[]> {
@@ -331,11 +299,8 @@ export class SupabaseStorage implements IStorage {
       .eq('patient_id', patientId)
       .order('scheduled_date', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching transfusions by patient:', error);
-      return [];
-    }
-    return data as Transfusion[];
+    if (error) return [];
+    return data || [];
   }
 
   async getTransfusionsByDonor(donorId: string): Promise<Transfusion[]> {
@@ -345,25 +310,20 @@ export class SupabaseStorage implements IStorage {
       .eq('donor_id', donorId)
       .order('scheduled_date', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching transfusions by donor:', error);
-      return [];
-    }
-    return data as Transfusion[];
+    if (error) return [];
+    return data || [];
   }
 
   async getUpcomingTransfusions(): Promise<Transfusion[]> {
     const { data, error } = await supabase
       .from('transfusions')
       .select('*')
+      .eq('status', 'scheduled')
       .gte('scheduled_date', new Date().toISOString())
       .order('scheduled_date', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching upcoming transfusions:', error);
-      return [];
-    }
-    return data as Transfusion[];
+    if (error) return [];
+    return data || [];
   }
 
   // Donor Family methods
@@ -374,11 +334,8 @@ export class SupabaseStorage implements IStorage {
       .eq('patient_id', patientId)
       .eq('is_active', true);
 
-    if (error) {
-      console.error('Error fetching donor family:', error);
-      return [];
-    }
-    return data as DonorFamily[];
+    if (error) return [];
+    return data || [];
   }
 
   async assignDonorToFamily(patientId: string, donorId: string): Promise<DonorFamily> {
@@ -387,29 +344,22 @@ export class SupabaseStorage implements IStorage {
       .insert({
         patient_id: patientId,
         donor_id: donorId,
-        assigned_at: new Date().toISOString(),
         is_active: true,
+        assigned_at: new Date().toISOString()
       })
       .select()
       .single();
 
-    if (error) {
-      console.error('Error assigning donor to family:', error);
-      throw new Error('Failed to assign donor to family');
-    }
-    return data as DonorFamily;
+    if (error || !data) throw new Error('Failed to assign donor to family');
+    return data;
   }
 
   async removeDonorFromFamily(patientId: string, donorId: string): Promise<void> {
-    const { error } = await supabase
+    await supabase
       .from('donor_families')
       .update({ is_active: false })
       .eq('patient_id', patientId)
       .eq('donor_id', donorId);
-
-    if (error) {
-      console.error('Error removing donor from family:', error);
-    }
   }
 
   // Notification methods
@@ -420,25 +370,19 @@ export class SupabaseStorage implements IStorage {
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching notification:', error);
-      return undefined;
-    }
-    return data as Notification;
+    if (error || !data) return undefined;
+    return data;
   }
 
-  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+  async createNotification(notification: InsertNotification): Promise<Notification> {
     const { data, error } = await supabase
       .from('notifications')
-      .insert(notificationData)
+      .insert(notification)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating notification:', error);
-      throw new Error('Failed to create notification');
-    }
-    return data as Notification;
+    if (error || !data) throw new Error('Failed to create notification');
+    return data;
   }
 
   async getNotificationsByUser(userId: string): Promise<Notification[]> {
@@ -448,22 +392,15 @@ export class SupabaseStorage implements IStorage {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching notifications by user:', error);
-      return [];
-    }
-    return data as Notification[];
+    if (error) return [];
+    return data || [];
   }
 
   async markNotificationAsRead(id: string): Promise<void> {
-    const { error } = await supabase
+    await supabase
       .from('notifications')
       .update({ is_read: true })
       .eq('id', id);
-
-    if (error) {
-      console.error('Error marking notification as read:', error);
-    }
   }
 
   // Emergency Request methods
@@ -474,25 +411,19 @@ export class SupabaseStorage implements IStorage {
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching emergency request:', error);
-      return undefined;
-    }
-    return data as EmergencyRequest;
+    if (error || !data) return undefined;
+    return data;
   }
 
-  async createEmergencyRequest(requestData: InsertEmergencyRequest): Promise<EmergencyRequest> {
+  async createEmergencyRequest(request: InsertEmergencyRequest): Promise<EmergencyRequest> {
     const { data, error } = await supabase
       .from('emergency_requests')
-      .insert(requestData)
+      .insert(request)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating emergency request:', error);
-      throw new Error('Failed to create emergency request');
-    }
-    return data as EmergencyRequest;
+    if (error || !data) throw new Error('Failed to create emergency request');
+    return data;
   }
 
   async getEmergencyRequestsByPatient(patientId: string): Promise<EmergencyRequest[]> {
@@ -502,28 +433,19 @@ export class SupabaseStorage implements IStorage {
       .eq('patient_id', patientId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching emergency requests:', error);
-      return [];
-    }
-    return data as EmergencyRequest[];
+    if (error) return [];
+    return data || [];
   }
 
-  async updateEmergencyRequest(id: string, updates: Partial<EmergencyRequest>): Promise<EmergencyRequest | undefined> {
+  async updateEmergencyRequest(id: string, request: Partial<EmergencyRequest>): Promise<EmergencyRequest | undefined> {
     const { data, error } = await supabase
       .from('emergency_requests')
-      .update(updates)
+      .update(request)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating emergency request:', error);
-      return undefined;
-    }
-    return data as EmergencyRequest;
+    if (error || !data) return undefined;
+    return data;
   }
 }
-
-// Create and export the storage instance
-export const storage: IStorage = new SupabaseStorage();

@@ -22,10 +22,7 @@ export default function Login() {
 
     try {
       await authService.login(email, password);
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to BloodConnect!",
-      });
+      // Navigate immediately without toast to avoid refresh issue
       setLocation("/dashboard");
     } catch (error) {
       toast({

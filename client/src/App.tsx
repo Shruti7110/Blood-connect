@@ -49,10 +49,7 @@ function AuthenticatedRouter() {
             if (user.role === 'patient') return <PatientHealth user={user} />;
             return <NotFound />;
           }} />
-          <Route path="/education" component={() => {
-            if (user.role === 'patient') return <PatientEducation user={user} />;
-            return <NotFound />;
-          }} />
+          <Route path="/education" component={() => <PatientEducation user={user} />} />
           <Route path="/">
             {user.role === 'patient' && <PatientDashboard user={user} />}
             {user.role === 'donor' && <DonorDashboard user={user} />}
@@ -74,6 +71,7 @@ function AuthenticatedRouter() {
               <Route path="/donations" component={() => <DonorDashboard user={user} />} />
               <Route path="/schedule" component={() => <DonorDashboard user={user} />} />
               <Route path="/badges" component={() => <DonorDashboard user={user} />} />
+              <Route path="/education" component={() => <PatientEducation user={user} />} />
             </>
           )}
 
@@ -82,6 +80,7 @@ function AuthenticatedRouter() {
               <Route path="/patients" component={() => <ProviderDashboard user={user} />} />
               <Route path="/transfusions" component={() => <ProviderDashboard user={user} />} />
               <Route path="/donors" component={() => <ProviderDashboard user={user} />} />
+              <Route path="/education" component={() => <PatientEducation user={user} />} />
             </>
           )}
 
