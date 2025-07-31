@@ -13,9 +13,32 @@ export function AuthWrapper({ children, fallback }: AuthWrapperProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
+    const validateSession = async () => {
+      const currentUser = authService.getCurrentUser();
+      
+      if (currentUser) {
+        // Check if user exists in current storage by validating with server
+        try {
+          const response = await fetch(`/api/users/${currentUser.id}`, { 
+            method: 'HEAD' // Just check if user exists without fetching data
+          });
+          if (response.status === 404) {
+            // User doesn't exist, clear invalid session
+            authService.clearSession();
+            setUser(null);
+          } else {
+            setUser(currentUser);
+          }
+        } catch {
+          // On error, keep session but will handle later
+          setUser(currentUser);
+        }
+      }
+      
+      setLoading(false);
+    };
+
+    validateSession();
   }, []);
 
   if (loading) {

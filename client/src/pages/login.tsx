@@ -79,7 +79,7 @@ export default function Login() {
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
               <Link href="/register">
-                <a className="text-primary hover:underline">Sign up</a>
+                <span className="text-primary hover:underline cursor-pointer">Sign up</span>
               </Link>
             </p>
           </div>

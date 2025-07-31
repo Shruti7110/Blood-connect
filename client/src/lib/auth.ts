@@ -78,6 +78,11 @@ export class AuthService {
     localStorage.removeItem('bloodconnect_user');
   }
 
+  clearSession(): void {
+    this.currentUser = null;
+    localStorage.removeItem('bloodconnect_user');
+  }
+
   getCurrentUser(): AuthUser | null {
     return this.currentUser;
   }

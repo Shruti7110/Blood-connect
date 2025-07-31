@@ -5,6 +5,19 @@ import { supabase } from "./supabase";
 import { insertUserSchema, insertPatientSchema, insertDonorSchema, insertHealthcareProviderSchema, insertTransfusionSchema, insertNotificationSchema, insertEmergencyRequestSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add user validation endpoint
+  app.head("/api/users/:id", async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).end();
+      }
+      res.status(200).end();
+    } catch (error) {
+      res.status(500).end();
+    }
+  });
+
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {

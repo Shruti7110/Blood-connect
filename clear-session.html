@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear BloodConnect Session</title>
+</head>
+<body>
+    <h1>Clearing old session...</h1>
+    <script>
+        localStorage.removeItem('bloodconnect_user');
+        alert('Session cleared! You can now log in with the demo accounts.');
+        window.location.href = '/login';
+    </script>
+</body>
+</html>
