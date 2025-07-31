@@ -378,23 +378,48 @@ export class SupabaseStorage implements IStorage {
 
   // Donor Family methods
   async getDonorFamily(patientId: string): Promise<DonorFamily[]> {
-    const { data, error } = await supabase
+    // First get the donor family relationships
+    const { data: familyData, error: familyError } = await supabase
       .from('donor_families')
-      .select(`
-        *,
-        donors!inner(
-          *,
-          users!inner(*)
-        )
-      `)
+      .select('*')
       .eq('patient_id', patientId)
       .eq('is_active', true);
 
-    if (error) {
-      console.error('Error fetching donor family:', error);
+    if (familyError || !familyData) {
+      console.error('Error fetching donor family:', familyError);
       return [];
     }
-    return data || [];
+
+    // Then get the complete donor and user data for each family member
+    const familyWithDetails = await Promise.all(
+      familyData.map(async (family) => {
+        // Get donor details
+        const { data: donorData } = await supabase
+          .from('donors')
+          .select('*')
+          .eq('id', family.donor_id)
+          .single();
+
+        // Get user details if donor exists
+        let userData = null;
+        if (donorData) {
+          const { data: userResult } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', donorData.user_id)
+            .single();
+          userData = userResult;
+        }
+
+        return {
+          ...family,
+          donor: donorData,
+          user: userData
+        };
+      })
+    );
+
+    return familyWithDetails;
   }
 
   async assignDonorToFamily(patientId: string, donorId: string): Promise<DonorFamily> {

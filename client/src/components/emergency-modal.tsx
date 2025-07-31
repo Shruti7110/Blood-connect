@@ -51,23 +51,57 @@ export function EmergencyModal({ isOpen, onClose, patientId }: EmergencyModalPro
     setNotes("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!urgencyLevel) {
+
+    if (!patientId || !urgencyLevel || !unitsNeeded) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please select an urgency level.",
+        description: "Please fill in all required fields",
       });
       return;
     }
 
-    createEmergencyRequest.mutate({
-      patientId,
-      urgencyLevel,
-      unitsNeeded: parseInt(unitsNeeded),
-      notes,
-    });
+    try {
+      const response = await fetch('/api/emergency-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          patientId,
+          urgencyLevel,
+          unitsNeeded: parseInt(unitsNeeded),
+          notes: notes || null,
+          status: 'active'
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create emergency request');
+      }
+
+      await response.json();
+
+      toast({
+        title: "Emergency Request Sent",
+        description: "Your emergency request has been sent to nearby donors and healthcare providers.",
+      });
+
+      // Invalidate and refetch emergency requests
+      queryClient.invalidateQueries({ queryKey: ['emergency-requests'] });
+
+      onClose();
+    } catch (error) {
+      console.error('Emergency request error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send emergency request. Please try again.",
+      });
+    }
   };
 
   return (

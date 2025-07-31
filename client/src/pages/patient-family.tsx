@@ -4,7 +4,7 @@ import { Navigation } from "@/components/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Phone, MapPin, Droplet, Heart, MessageSquare } from "lucide-react";
+import { Users, Phone, MapPin, Droplet, Heart } from "lucide-react";
 import { type AuthUser } from "@/lib/auth";
 
 interface PatientFamilyProps {
@@ -83,16 +83,10 @@ export default function PatientFamily({ user }: PatientFamilyProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-center">
                   <Badge variant={member.donor?.availableForDonation ? "default" : "secondary"}>
                     {member.donor?.availableForDonation ? 'Available' : 'Not Available'}
                   </Badge>
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline">
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      Message
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
             </Card>
