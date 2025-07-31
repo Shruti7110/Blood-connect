@@ -68,8 +68,43 @@ export class SupabaseStorage implements IStorage {
       .eq('user_id', userId)
       .single();
 
-    if (error || !data) return undefined;
-    return data;
+    if (error || !data) {
+      console.error('Error fetching patient by user ID:', error);
+      return undefined;
+    }
+    
+    // Map database column names to expected field names
+    const mappedData = {
+      ...data,
+      userId: data.user_id,
+      dateOfBirth: data.date_of_birth,
+      thalassemiaType: data.thalassemia_type,
+      recentPreTransfusionHb: data.recent_pre_transfusion_hb,
+      symptomsBetweenTransfusions: data.symptoms_between_transfusions,
+      poorGrowthHistory: data.poor_growth_history,
+      boneDeformities: data.bone_deformities,
+      recurrentInfections: data.recurrent_infections,
+      organIssuesHistory: data.organ_issues_history,
+      transfusionFrequencyPast6Months: data.transfusion_frequency_past_6_months,
+      unitsPerSession: data.units_per_session,
+      usualTransfusionHbLevel: data.usual_transfusion_hb_level,
+      recentIntervalChanges: data.recent_interval_changes,
+      ironChelationTherapy: data.iron_chelation_therapy,
+      chelationMedication: data.chelation_medication,
+      chelationFrequency: data.chelation_frequency,
+      lastSerumFerritin: data.last_serum_ferritin,
+      lastLiverIronMeasurement: data.last_liver_iron_measurement,
+      adverseReactionsHistory: data.adverse_reactions_history,
+      manualTransfusionFrequency: data.manual_transfusion_frequency,
+      transfusionHistory: data.transfusion_history,
+      nextTransfusionDate: data.next_transfusion_date,
+      hemoglobinLevel: data.hemoglobin_level,
+      ironLevels: data.iron_levels,
+      lastTransfusion: data.last_transfusion,
+      totalTransfusions: data.total_transfusions
+    };
+    
+    return mappedData;
   }
 
   async createPatient(patient: InsertPatient): Promise<Patient> {
@@ -299,8 +334,23 @@ export class SupabaseStorage implements IStorage {
       .eq('patient_id', patientId)
       .order('scheduled_date', { ascending: false });
 
-    if (error) return [];
-    return data || [];
+    if (error) {
+      console.error('Error fetching transfusions:', error);
+      return [];
+    }
+    
+    // Map database column names
+    const mappedData = (data || []).map(transfusion => ({
+      ...transfusion,
+      patientId: transfusion.patient_id,
+      donorId: transfusion.donor_id,
+      providerId: transfusion.provider_id,
+      scheduledDate: transfusion.scheduled_date,
+      completedDate: transfusion.completed_date,
+      unitsRequired: transfusion.units_required
+    }));
+    
+    return mappedData;
   }
 
   async getTransfusionsByDonor(donorId: string): Promise<Transfusion[]> {
@@ -330,11 +380,20 @@ export class SupabaseStorage implements IStorage {
   async getDonorFamily(patientId: string): Promise<DonorFamily[]> {
     const { data, error } = await supabase
       .from('donor_families')
-      .select('*')
+      .select(`
+        *,
+        donors!inner(
+          *,
+          users!inner(*)
+        )
+      `)
       .eq('patient_id', patientId)
       .eq('is_active', true);
 
-    if (error) return [];
+    if (error) {
+      console.error('Error fetching donor family:', error);
+      return [];
+    }
     return data || [];
   }
 

@@ -72,11 +72,12 @@ export function EmergencyModal({ isOpen, onClose, patientId }: EmergencyModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Emergency Blood Request</DialogTitle>
+          <p className="text-sm text-gray-600">Submit an urgent request for blood transfusion</p>
         </DialogHeader>
-        
+
         <div className="mb-6">
           <div className="bg-secondary/10 border border-secondary/20 rounded-lg p-4 mb-4">
             <div className="flex items-center space-x-3">
@@ -89,7 +90,7 @@ export function EmergencyModal({ isOpen, onClose, patientId }: EmergencyModalPro
               </div>
             </div>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="urgency">Urgency Level</Label>
@@ -104,7 +105,7 @@ export function EmergencyModal({ isOpen, onClose, patientId }: EmergencyModalPro
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="units">Units Needed</Label>
               <Input
@@ -117,7 +118,7 @@ export function EmergencyModal({ isOpen, onClose, patientId }: EmergencyModalPro
                 placeholder="2"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="notes">Additional Notes</Label>
               <Textarea
@@ -128,7 +129,7 @@ export function EmergencyModal({ isOpen, onClose, patientId }: EmergencyModalPro
                 placeholder="Any special requirements or medical notes..."
               />
             </div>
-            
+
             <div className="flex space-x-3 pt-4">
               <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
                 Cancel

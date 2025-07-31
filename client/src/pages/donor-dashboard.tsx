@@ -21,8 +21,17 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
     enabled: !!donor?.id,
   });
 
+  const { data: myPatients = [] } = useQuery<any[]>({
+    queryKey: ['/api/donor-patients', donor?.id],
+    enabled: !!donor?.id,
+  });
+
   const upcomingDonations = transfusions.filter((t: any) => 
-    t.status === "scheduled" && new Date(t.scheduledDate) > new Date()
+    t.status === "scheduled" && new Date(t.scheduledDate || t.scheduled_date) > new Date()
+  );
+
+  const completedDonations = transfusions.filter((t: any) => 
+    t.status === "completed"
   );
 
   const formatDate = (dateString: string) => {

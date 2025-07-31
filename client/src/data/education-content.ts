@@ -1,60 +1,86 @@
 export const educationContent = [
   {
     id: "thalassemia-basics",
-    title: "Thalassemia Basics",
+    title: "Understanding Thalassemia",
     category: "thalassemia-basics",
     type: "article",
-    description: "Understanding the fundamentals of thalassemia, its types, symptoms, and diagnosis methods.",
+    description: "Learn about thalassemia, its types, inheritance patterns, and how it affects your body.",
     readingTime: "8 min read",
     difficulty: "Beginner",
-    tags: ["basics", "symptoms", "diagnosis"],
-    url: "/education/thalassemia-basics",
-    content: `Thalassemia is an inherited blood disorder that affects the body's ability to produce healthy red blood cells and hemoglobin. There are two main types:
+    tags: ["basics", "genetics", "inheritance"],
+    url: "#",
+    content: `Thalassemia is an inherited blood disorder that affects the production of hemoglobin - the protein in red blood cells that carries oxygen throughout your body.
 
-• Alpha Thalassemia: Caused by reduced or absent alpha globin chains
-• Beta Thalassemia: Caused by reduced or absent beta globin chains
+**Types of Thalassemia:**
+• Alpha Thalassemia: Affects alpha globin chain production
+• Beta Thalassemia: Affects beta globin chain production
 
-The severity ranges from mild (thalassemia minor/trait) to severe (thalassemia major).
+**Severity Levels:**
+• Thalassemia Trait (Minor): Mild symptoms, carriers
+• Thalassemia Intermedia: Moderate symptoms
+• Thalassemia Major: Severe symptoms, requires regular transfusions
 
-Key Symptoms:
+**How It's Inherited:**
+Thalassemia is passed down from parents to children through genes. Both parents must carry the gene for a child to have thalassemia major.
+
+**Common Symptoms:**
 • Fatigue and weakness
-• Pale skin and mucous membranes
+• Pale appearance
 • Shortness of breath
-• Slow growth in children
-• Bone deformities (in severe cases)
-• Dark urine
-
-Diagnosis includes Complete Blood Count (CBC), hemoglobin electrophoresis, DNA analysis, and family history assessment.`,
+• Delayed growth in children
+• Bone problems
+• Enlarged spleen`,
     sections: [
       {
-        subtitle: "What is Thalassemia?",
-        content: "Thalassemia is an inherited blood disorder that affects the body's ability to produce healthy red blood cells and hemoglobin."
+        subtitle: "What Causes Thalassemia?",
+        content: "Thalassemia is caused by mutations in genes that control hemoglobin production. These mutations are inherited from parents."
       },
       {
-        subtitle: "Key Symptoms", 
-        content: "Common symptoms include fatigue, weakness, pale skin, shortness of breath, and slow growth in children."
-      },
-      {
-        subtitle: "Diagnosis",
-        content: "Thalassemia is diagnosed through CBC, hemoglobin electrophoresis, DNA analysis, and family history assessment."
+        subtitle: "Living With Thalassemia",
+        content: "With proper treatment including regular transfusions and iron chelation therapy, people with thalassemia can live full, productive lives."
       }
     ]
   },
   {
-    id: "understanding-treatment",
-    title: "Understanding Treatment",
+    id: "blood-transfusions",
+    title: "Blood Transfusion Guide",
     category: "transfusion-care",
     type: "guide",
-    description: "Comprehensive guide to blood transfusions, iron chelation therapy, and other treatment options.",
+    description: "Everything you need to know about blood transfusions - preparation, process, and aftercare.",
     readingTime: "12 min read",
     difficulty: "Intermediate",
-    tags: ["treatment", "transfusion", "chelation", "therapy"],
-    url: "/education/understanding-treatment",
-    content: `Blood transfusions are the cornerstone of thalassemia treatment. Regular transfusions are usually given every 2-4 weeks and take 2-4 hours per session. Pre-transfusion blood tests are required for safety.
+    tags: ["transfusion", "safety", "procedure"],
+    url: "#",
+    content: `Blood transfusions are life-saving treatments for people with thalassemia major. Here's what you need to know:
 
-Safety tips include verifying blood compatibility, reporting unusual symptoms immediately, and staying hydrated. Possible side effects include mild fever, chills, and rare allergic reactions.
+**Before Your Transfusion:**
+• Blood tests to check hemoglobin levels
+• Cross-matching to ensure compatibility
+• Health screening for any infections
+• Pre-medication if you have a history of reactions
 
-Iron chelation therapy removes excess iron from your body, which builds up from regular transfusions. Treatment typically starts after 10-20 transfusions and includes daily oral medications like Deferasirox or Deferiprone, with regular monitoring of iron levels.`,
+**During the Transfusion:**
+• Takes 2-4 hours depending on units needed
+• Continuous monitoring of vital signs
+• Immediate reporting of any unusual symptoms
+• Stay hydrated and comfortable
+
+**Types of Blood Products:**
+• Packed Red Blood Cells (most common)
+• Washed cells (for those with reactions)
+• Leukocyte-reduced blood (prevents complications)
+
+**Potential Side Effects:**
+• Mild fever or chills (common)
+• Allergic reactions (rare)
+• Iron overload (long-term concern)
+• Transfusion reactions (very rare)
+
+**Safety Measures:**
+• All blood is screened for infections
+• Strict compatibility testing
+• Trained medical staff monitoring
+• Emergency protocols in place`,
     sections: [
       {
         subtitle: "Regular Blood Transfusions",

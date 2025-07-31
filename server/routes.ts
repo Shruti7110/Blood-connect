@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { supabase } from "./supabase";
 import { insertUserSchema, insertPatientSchema, insertDonorSchema, insertHealthcareProviderSchema, insertTransfusionSchema, insertNotificationSchema, insertEmergencyRequestSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -93,7 +94,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(updatedPatient);
     } catch (error) {
+      console.error("Error updating patient:", error);
       res.status(500).json({ message: "Failed to update patient" });
+    }
+  });
+
+  app.get("/api/patients/:id", async (req, res) => {
+    try {
+      const patient = await storage.getPatient(req.params.id);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+      res.json(patient);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch patient" });
     }
   });
 
@@ -162,11 +176,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/transfusions", async (req, res) => {
     try {
+      console.log("Received transfusion data:", req.body);
       const transfusionData = insertTransfusionSchema.parse(req.body);
       const transfusion = await storage.createTransfusion(transfusionData);
       res.status(201).json(transfusion);
     } catch (error) {
-      res.status(400).json({ message: "Invalid transfusion data" });
+      console.error("Transfusion creation error:", error);
+      if (error.name === 'ZodError') {
+        res.status(400).json({ message: "Invalid transfusion data", details: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create transfusion" });
+      }
     }
   });
 
@@ -243,6 +263,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // Get patients linked to a donor
+  app.get("/api/donor-patients/:donorId", async (req, res) => {
+    try {
+      const { data, error } = await supabase
+        .from('donor_families')
+        .select(`
+          *,
+          patients!inner(
+            *,
+            users!inner(*)
+          )
+        `)
+        .eq('donor_id', req.params.donorId)
+        .eq('is_active', true);
+
+      if (error) {
+        return res.status(500).json({ message: "Failed to fetch patients" });
+      }
+
+      res.json(data || []);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch patients" });
     }
   });
 

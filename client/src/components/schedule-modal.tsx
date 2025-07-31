@@ -72,11 +72,12 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Schedule Transfusion</DialogTitle>
+          <p className="text-sm text-gray-600">Schedule your next blood transfusion appointment</p>
         </DialogHeader>
-        
+
         <div className="mb-6">
           <div className="bg-secondary/10 border border-secondary/20 rounded-lg p-4 mb-4">
             <div className="flex items-center space-x-3">
@@ -89,7 +90,7 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
               </div>
             </div>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="date">Date and Time</Label>
@@ -101,7 +102,7 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
                 min={new Date().toISOString().slice(0, 16)}
               />
             </div>
-            
+
             <div>
               <Label htmlFor="location">Location</Label>
               <Input
@@ -111,7 +112,7 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
                 placeholder="Hospital and room number"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="notes">Notes</Label>
               <Textarea
@@ -122,7 +123,7 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
                 placeholder="Any special instructions..."
               />
             </div>
-            
+
             <div className="flex space-x-3 pt-4">
               <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
                 Cancel
