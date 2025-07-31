@@ -301,7 +301,26 @@ export class MemStorage implements IStorage {
     const patient: Patient = { 
       ...insertPatient, 
       id,
+      dateOfBirth: insertPatient.dateOfBirth || null,
+      weight: insertPatient.weight || null,
       diagnosis: insertPatient.diagnosis || null,
+      thalassemiaType: insertPatient.thalassemiaType || null,
+      recentPreTransfusionHb: insertPatient.recentPreTransfusionHb || null,
+      symptomsBetweenTransfusions: insertPatient.symptomsBetweenTransfusions || null,
+      poorGrowthHistory: insertPatient.poorGrowthHistory ?? null,
+      boneDeformities: insertPatient.boneDeformities ?? null,
+      recurrentInfections: insertPatient.recurrentInfections ?? null,
+      organIssuesHistory: insertPatient.organIssuesHistory || null,
+      transfusionFrequencyPast6Months: insertPatient.transfusionFrequencyPast6Months || null,
+      unitsPerSession: insertPatient.unitsPerSession ?? null,
+      usualTransfusionHbLevel: insertPatient.usualTransfusionHbLevel || null,
+      recentIntervalChanges: insertPatient.recentIntervalChanges || null,
+      chelationMedication: insertPatient.chelationMedication || null,
+      chelationFrequency: insertPatient.chelationFrequency || null,
+      lastSerumFerritin: insertPatient.lastSerumFerritin || null,
+      lastLiverIronMeasurement: insertPatient.lastLiverIronMeasurement || null,
+      adverseReactionsHistory: insertPatient.adverseReactionsHistory || null,
+      manualTransfusionFrequency: insertPatient.manualTransfusionFrequency || null,
       transfusionHistory: insertPatient.transfusionHistory || [],
       ironChelationTherapy: insertPatient.ironChelationTherapy || null,
       nextTransfusionDate: insertPatient.nextTransfusionDate || null,
@@ -539,9 +558,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-import { SupabaseStorage } from './supabase-storage';
-
 // Create and export the storage instance
-export const storage: IStorage = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY 
-  ? new SupabaseStorage() 
-  : new MemStorage();
+export const storage: IStorage = new MemStorage();

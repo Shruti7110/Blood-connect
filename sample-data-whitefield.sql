@@ -1,28 +1,4 @@
-
-
--- Sample data for Whitefield, Bangalore region
--- This includes 30 donors, 2 patients, 2 healthcare providers, 3 emergency requests, and 2 months of donation history
-
--- Insert Users (30 donors + 2 patients + 2 healthcare providers)
-WITH user_inserts AS (
-  INSERT INTO users (email, password, role, name, phone, location, blood_group, created_at) VALUES
-  -- Donors (30)
-  ('donor1@email.com', 'password123', 'donor', 'Rajesh Kumar', '+91-9876543210', 'Whitefield, Bangalore', 'O+', '2024-01-01 10:00:00'),
-  ('donor2@email.com', 'password123', 'donor', 'Priya Sharma', '+91-9876543211', 'Whitefield, Bangalore', 'A+', '2024-01-01 10:00:00'),
-  ('donor3@email.com', 'password123', 'donor', 'Amit Singh', '+91-9876543212', 'Whitefield, Bangalore', 'B+', '2024-01-01 10:00:00'),
-  ('donor4@email.com', 'password123', 'donor', 'Sneha Reddy', '+91-9876543213', 'Whitefield, Bangalore', 'AB+', '2024-01-01 10:00:00'),
-  ('donor5@email.com', 'password123', 'donor', 'Vikram Patel', '+91-9876543214', 'Whitefield, Bangalore', 'O-', '2024-01-01 10:00:00'),
-  ('donor6@email.com', 'password123', 'donor', 'Kavya Nair', '+91-9876543215', 'Whitefield, Bangalore', 'A-', '2024-01-01 10:00:00'),
-  ('donor7@email.com', 'password123', 'donor', 'Ravi Gupta', '+91-9876543216', 'Whitefield, Bangalore', 'B-', '2024-01-01 10:00:00'),
-  ('donor8@email.com', 'password123', 'donor', 'Deepika Joshi', '+91-9876543217', 'Whitefield, Bangalore', 'AB-', '2024-01-01 10:00:00'),
-  ('donor9@email.com', 'password123', 'donor', 'Arjun Menon', '+91-9876543218', 'Whitefield, Bangalore', 'O+', '2024-01-01 10:00:00'),
-  ('donor10@email.com', 'password123', 'donor', 'Pooja Agarwal', '+91-9876543219', 'Whitefield, Bangalore', 'A+', '2024-01-01 10:00:00'),
-  ('donor11@email.com', 'password123', 'donor', 'Suresh Babu', '+91-9876543220', 'Whitefield, Bangalore', 'B+', '2024-01-01 10:00:00'),
-  ('donor12@email.com', 'password123', 'donor', 'Lakshmi Iyer', '+91-9876543221', 'Whitefield, Bangalore', 'O+', '2024-01-01 10:00:00'),
-  ('donor13@email.com', 'password123', 'donor', 'Kiran Kumar', '+91-9876543222', 'Whitefield, Bangalore', 'A+', '2024-01-01 10:00:00'),
-  ('donor14@email.com', 'password123', 'donor', 'Meera Krishnan', '+91-9876543223', 'Whitefield, Bangalore', 'B+', '2024-01-01 10:00:00'),
-  ('donor15@email.com', 'password123', 'donor', 'Anil Varma', '+91-9876543224', 'Whitefield, Bangalore', 'AB+', '2024-01-01 10:00:00'),
-  ('donor16@email.com', 'password123', 'donor', 'Rashmi Shetty', '+91-9876543225', 'Whitefield, Bangalore', 'O-', '2024-01-01 10:00:00'),
+76543225', 'Whitefield, Bangalore', 'O-', '2024-01-01 10:00:00'),
   ('donor17@email.com', 'password123', 'donor', 'Mahesh Rao', '+91-9876543226', 'Whitefield, Bangalore', 'A-', '2024-01-01 10:00:00'),
   ('donor18@email.com', 'password123', 'donor', 'Divya Bhat', '+91-9876543227', 'Whitefield, Bangalore', 'B-', '2024-01-01 10:00:00'),
   ('donor19@email.com', 'password123', 'donor', 'Santosh Pillai', '+91-9876543228', 'Whitefield, Bangalore', 'O+', '2024-01-01 10:00:00'),

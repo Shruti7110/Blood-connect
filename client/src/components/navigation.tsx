@@ -69,15 +69,15 @@ export function Navigation({ user }: NavigationProps) {
             <div className="hidden md:flex space-x-6 ml-8">
               {navItems.map((item) => (
                 <Link key={item.href} href={item.href}>
-                  <a
-                    className={`pb-4 ${
+                  <span
+                    className={`pb-4 cursor-pointer ${
                       item.active
                         ? 'text-primary font-medium border-b-2 border-primary'
                         : 'text-gray-600 hover:text-primary'
                     }`}
                   >
                     {item.label}
-                  </a>
+                  </span>
                 </Link>
               ))}
             </div>
