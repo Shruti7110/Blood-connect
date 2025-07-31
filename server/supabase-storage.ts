@@ -119,15 +119,82 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updatePatient(id: string, patient: Partial<Patient>): Promise<Patient | undefined> {
+    // Map camelCase to snake_case for database
+    const dbPatient: any = {};
+    
+    if (patient.userId !== undefined) dbPatient.user_id = patient.userId;
+    if (patient.dateOfBirth !== undefined) dbPatient.date_of_birth = patient.dateOfBirth;
+    if (patient.weight !== undefined) dbPatient.weight = patient.weight;
+    if (patient.diagnosis !== undefined) dbPatient.diagnosis = patient.diagnosis;
+    if (patient.thalassemiaType !== undefined) dbPatient.thalassemia_type = patient.thalassemiaType;
+    if (patient.recentPreTransfusionHb !== undefined) dbPatient.recent_pre_transfusion_hb = patient.recentPreTransfusionHb;
+    if (patient.symptomsBetweenTransfusions !== undefined) dbPatient.symptoms_between_transfusions = patient.symptomsBetweenTransfusions;
+    if (patient.poorGrowthHistory !== undefined) dbPatient.poor_growth_history = patient.poorGrowthHistory;
+    if (patient.boneDeformities !== undefined) dbPatient.bone_deformities = patient.boneDeformities;
+    if (patient.recurrentInfections !== undefined) dbPatient.recurrent_infections = patient.recurrentInfections;
+    if (patient.organIssuesHistory !== undefined) dbPatient.organ_issues_history = patient.organIssuesHistory;
+    if (patient.transfusionFrequencyPast6Months !== undefined) dbPatient.transfusion_frequency_past_6_months = patient.transfusionFrequencyPast6Months;
+    if (patient.unitsPerSession !== undefined) dbPatient.units_per_session = patient.unitsPerSession;
+    if (patient.usualTransfusionHbLevel !== undefined) dbPatient.usual_transfusion_hb_level = patient.usualTransfusionHbLevel;
+    if (patient.recentIntervalChanges !== undefined) dbPatient.recent_interval_changes = patient.recentIntervalChanges;
+    if (patient.ironChelationTherapy !== undefined) dbPatient.iron_chelation_therapy = patient.ironChelationTherapy;
+    if (patient.chelationMedication !== undefined) dbPatient.chelation_medication = patient.chelationMedication;
+    if (patient.chelationFrequency !== undefined) dbPatient.chelation_frequency = patient.chelationFrequency;
+    if (patient.lastSerumFerritin !== undefined) dbPatient.last_serum_ferritin = patient.lastSerumFerritin;
+    if (patient.lastLiverIronMeasurement !== undefined) dbPatient.last_liver_iron_measurement = patient.lastLiverIronMeasurement;
+    if (patient.adverseReactionsHistory !== undefined) dbPatient.adverse_reactions_history = patient.adverseReactionsHistory;
+    if (patient.manualTransfusionFrequency !== undefined) dbPatient.manual_transfusion_frequency = patient.manualTransfusionFrequency;
+    if (patient.transfusionHistory !== undefined) dbPatient.transfusion_history = patient.transfusionHistory;
+    if (patient.nextTransfusionDate !== undefined) dbPatient.next_transfusion_date = patient.nextTransfusionDate;
+    if (patient.hemoglobinLevel !== undefined) dbPatient.hemoglobin_level = patient.hemoglobinLevel;
+    if (patient.ironLevels !== undefined) dbPatient.iron_levels = patient.ironLevels;
+    if (patient.lastTransfusion !== undefined) dbPatient.last_transfusion = patient.lastTransfusion;
+    if (patient.totalTransfusions !== undefined) dbPatient.total_transfusions = patient.totalTransfusions;
+
     const { data, error } = await supabase
       .from('patients')
-      .update(patient)
+      .update(dbPatient)
       .eq('id', id)
       .select()
       .single();
 
-    if (error || !data) return undefined;
-    return data;
+    if (error || !data) {
+      console.error('Error updating patient:', error);
+      return undefined;
+    }
+
+    // Map back to camelCase
+    const mappedData = {
+      ...data,
+      userId: data.user_id,
+      dateOfBirth: data.date_of_birth,
+      thalassemiaType: data.thalassemia_type,
+      recentPreTransfusionHb: data.recent_pre_transfusion_hb,
+      symptomsBetweenTransfusions: data.symptoms_between_transfusions,
+      poorGrowthHistory: data.poor_growth_history,
+      boneDeformities: data.bone_deformities,
+      recurrentInfections: data.recurrent_infections,
+      organIssuesHistory: data.organ_issues_history,
+      transfusionFrequencyPast6Months: data.transfusion_frequency_past_6_months,
+      unitsPerSession: data.units_per_session,
+      usualTransfusionHbLevel: data.usual_transfusion_hb_level,
+      recentIntervalChanges: data.recent_interval_changes,
+      ironChelationTherapy: data.iron_chelation_therapy,
+      chelationMedication: data.chelation_medication,
+      chelationFrequency: data.chelation_frequency,
+      lastSerumFerritin: data.last_serum_ferritin,
+      lastLiverIronMeasurement: data.last_liver_iron_measurement,
+      adverseReactionsHistory: data.adverse_reactions_history,
+      manualTransfusionFrequency: data.manual_transfusion_frequency,
+      transfusionHistory: data.transfusion_history,
+      nextTransfusionDate: data.next_transfusion_date,
+      hemoglobinLevel: data.hemoglobin_level,
+      ironLevels: data.iron_levels,
+      lastTransfusion: data.last_transfusion,
+      totalTransfusions: data.total_transfusions
+    };
+    
+    return mappedData;
   }
 
   async getPatients(): Promise<Patient[]> {
@@ -305,14 +372,40 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createTransfusion(transfusion: InsertTransfusion): Promise<Transfusion> {
+    // Map camelCase to snake_case for database
+    const dbTransfusion = {
+      patient_id: transfusion.patientId,
+      donor_id: transfusion.donorId || null,
+      provider_id: transfusion.providerId || null,
+      scheduled_date: transfusion.scheduledDate,
+      completed_date: transfusion.completedDate || null,
+      status: transfusion.status || 'scheduled',
+      location: transfusion.location || null,
+      units_required: transfusion.unitsRequired || null,
+      notes: transfusion.notes || null
+    };
+
     const { data, error } = await supabase
       .from('transfusions')
-      .insert(transfusion)
+      .insert(dbTransfusion)
       .select()
       .single();
 
-    if (error || !data) throw new Error('Failed to create transfusion');
-    return data;
+    if (error || !data) {
+      console.error('Transfusion creation error:', error);
+      throw new Error('Failed to create transfusion');
+    }
+
+    // Map back to camelCase
+    return {
+      ...data,
+      patientId: data.patient_id,
+      donorId: data.donor_id,
+      providerId: data.provider_id,
+      scheduledDate: data.scheduled_date,
+      completedDate: data.completed_date,
+      unitsRequired: data.units_required
+    };
   }
 
   async updateTransfusion(id: string, transfusion: Partial<Transfusion>): Promise<Transfusion | undefined> {
@@ -378,10 +471,16 @@ export class SupabaseStorage implements IStorage {
 
   // Donor Family methods
   async getDonorFamily(patientId: string): Promise<DonorFamily[]> {
-    // First get the donor family relationships
+    // Get donor family with all related data in one query
     const { data: familyData, error: familyError } = await supabase
       .from('donor_families')
-      .select('*')
+      .select(`
+        *,
+        donors!inner (
+          *,
+          users!inner (*)
+        )
+      `)
       .eq('patient_id', patientId)
       .eq('is_active', true);
 
@@ -390,34 +489,28 @@ export class SupabaseStorage implements IStorage {
       return [];
     }
 
-    // Then get the complete donor and user data for each family member
-    const familyWithDetails = await Promise.all(
-      familyData.map(async (family) => {
-        // Get donor details
-        const { data: donorData } = await supabase
-          .from('donors')
-          .select('*')
-          .eq('id', family.donor_id)
-          .single();
-
-        // Get user details if donor exists
-        let userData = null;
-        if (donorData) {
-          const { data: userResult } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', donorData.user_id)
-            .single();
-          userData = userResult;
-        }
-
-        return {
-          ...family,
-          donor: donorData,
-          user: userData
-        };
-      })
-    );
+    // Map the data to the expected format
+    const familyWithDetails = familyData.map((family: any) => ({
+      id: family.id,
+      patientId: family.patient_id,
+      donorId: family.donor_id,
+      assignedAt: family.assigned_at,
+      isActive: family.is_active,
+      donor: {
+        ...family.donors,
+        userId: family.donors.user_id,
+        eligibilityStatus: family.donors.eligibility_status,
+        lastDonation: family.donors.last_donation,
+        totalDonations: family.donors.total_donations,
+        availableForDonation: family.donors.available_for_donation,
+        donationHistory: family.donors.donation_history
+      },
+      user: {
+        ...family.donors.users,
+        bloodGroup: family.donors.users.blood_group,
+        createdAt: family.donors.users.created_at
+      }
+    }));
 
     return familyWithDetails;
   }
@@ -500,14 +593,35 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createEmergencyRequest(request: InsertEmergencyRequest): Promise<EmergencyRequest> {
+    // Map camelCase to snake_case for database
+    const dbRequest = {
+      patient_id: request.patientId,
+      urgency_level: request.urgencyLevel,
+      units_needed: request.unitsNeeded,
+      notes: request.notes || null,
+      status: request.status || 'pending',
+      created_at: new Date().toISOString()
+    };
+
     const { data, error } = await supabase
       .from('emergency_requests')
-      .insert(request)
+      .insert(dbRequest)
       .select()
       .single();
 
-    if (error || !data) throw new Error('Failed to create emergency request');
-    return data;
+    if (error || !data) {
+      console.error('Emergency request creation error:', error);
+      throw new Error('Failed to create emergency request');
+    }
+
+    // Map back to camelCase
+    return {
+      ...data,
+      patientId: data.patient_id,
+      urgencyLevel: data.urgency_level,
+      unitsNeeded: data.units_needed,
+      createdAt: data.created_at
+    };
   }
 
   async getEmergencyRequestsByPatient(patientId: string): Promise<EmergencyRequest[]> {

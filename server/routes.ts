@@ -279,18 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update patient data
-  app.put("/api/patients/:id", async (req, res) => {
-    try {
-      const updatedPatient = await storage.updatePatient(req.params.id, req.body);
-      if (!updatedPatient) {
-        return res.status(404).json({ message: "Patient not found" });
-      }
-      res.json(updatedPatient);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update patient" });
-    }
-  });
+  
 
   // Emergency Request routes
   app.get("/api/emergency-requests/patient/:patientId", async (req, res) => {
