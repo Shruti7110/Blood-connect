@@ -128,13 +128,13 @@ export class MemStorage implements IStorage {
     const patient: Patient = {
       id: "patient-profile-1",
       userId: "patient-1",
-      
+
       // Basic info
       dateOfBirth: new Date("1995-08-15"),
       weight: "68 kg",
       diagnosis: "Thalassemia Major",
       thalassemiaType: "beta-thalassemia-major",
-      
+
       // Clinical status
       recentPreTransfusionHb: "8.5 g/dL",
       symptomsBetweenTransfusions: "Fatigue and shortness of breath when Hb drops below 8",
@@ -142,13 +142,13 @@ export class MemStorage implements IStorage {
       boneDeformities: false,
       recurrentInfections: false,
       organIssuesHistory: "Mild splenomegaly",
-      
+
       // Transfusion history
       transfusionFrequencyPast6Months: "every-3-weeks",
       unitsPerSession: 2,
       usualTransfusionHbLevel: "8.0 g/dL",
       recentIntervalChanges: "No recent changes",
-      
+
       // Iron and chelation
       ironChelationTherapy: "yes",
       chelationMedication: "Deferasirox",
@@ -156,10 +156,10 @@ export class MemStorage implements IStorage {
       lastSerumFerritin: "2400 ng/mL",
       lastLiverIronMeasurement: "Not available",
       adverseReactionsHistory: "No adverse reactions",
-      
+
       // Manual frequency (not used in this case)
       manualTransfusionFrequency: null,
-      
+
       // Existing fields
       transfusionHistory: [],
       nextTransfusionDate: new Date("2024-03-15T10:00:00Z"),
@@ -539,4 +539,9 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { SupabaseStorage } from './supabase-storage';
+
+// Create and export the storage instance
+export const storage: IStorage = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY 
+  ? new SupabaseStorage() 
+  : new MemStorage();
