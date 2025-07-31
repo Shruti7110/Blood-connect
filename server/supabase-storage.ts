@@ -378,7 +378,6 @@ export class SupabaseStorage implements IStorage {
       donor_id: transfusion.donorId || null,
       provider_id: transfusion.providerId || null,
       scheduled_date: transfusion.scheduledDate,
-      completed_date: transfusion.completedDate || null,
       status: transfusion.status || 'scheduled',
       location: transfusion.location || null,
       units_required: transfusion.unitsRequired || null,
