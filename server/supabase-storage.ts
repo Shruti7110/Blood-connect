@@ -1,212 +1,529 @@
-import { createClient } from '@supabase/supabase-js';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from '../shared/schema';
+
+import { supabase } from './supabase';
 import { type IStorage, type User, type InsertUser, type Patient, type InsertPatient, type Donor, type InsertDonor, type HealthcareProvider, type InsertHealthcareProvider, type Transfusion, type InsertTransfusion, type Notification, type InsertNotification, type EmergencyRequest, type InsertEmergencyRequest, type DonorFamily } from './storage';
 
 export class SupabaseStorage implements IStorage {
-  private db: ReturnType<typeof drizzle>;
-  private supabase: ReturnType<typeof createClient>;
-
-  constructor() {
-    if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL is required for Supabase storage');
-    }
-    
-    const connectionString = process.env.DATABASE_URL;
-    const client = postgres(connectionString);
-    this.db = drizzle(client, { schema });
-    
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-      this.supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    } else {
-      throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY are required');
-    }
-  }
-
   // User methods
   async getUser(id: string): Promise<User | undefined> {
-    const users = await this.db.select().from(schema.users).where(eq(schema.users.id, id));
-    return users[0];
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user:', error);
+      return undefined;
+    }
+    return data as User;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const users = await this.db.select().from(schema.users).where(eq(schema.users.email, email));
-    return users[0];
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user by email:', error);
+      return undefined;
+    }
+    return data as User;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const users = await this.db.insert(schema.users).values(insertUser).returning();
-    return users[0];
+  async createUser(userData: InsertUser): Promise<User> {
+    const { data, error } = await supabase
+      .from('users')
+      .insert(userData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating user:', error);
+      throw new Error('Failed to create user');
+    }
+    return data as User;
   }
 
-  async updateUser(id: string, updateData: Partial<User>): Promise<User | undefined> {
-    const users = await this.db.update(schema.users).set(updateData).where(eq(schema.users.id, id)).returning();
-    return users[0];
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating user:', error);
+      return undefined;
+    }
+    return data as User;
   }
 
   // Patient methods
   async getPatient(id: string): Promise<Patient | undefined> {
-    const patients = await this.db.select().from(schema.patients).where(eq(schema.patients.id, id));
-    return patients[0];
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching patient:', error);
+      return undefined;
+    }
+    return data as Patient;
   }
 
   async getPatientByUserId(userId: string): Promise<Patient | undefined> {
-    const patients = await this.db.select().from(schema.patients).where(eq(schema.patients.userId, userId));
-    return patients[0];
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching patient by user ID:', error);
+      return undefined;
+    }
+    return data as Patient;
   }
 
-  async createPatient(insertPatient: InsertPatient): Promise<Patient> {
-    const patients = await this.db.insert(schema.patients).values(insertPatient).returning();
-    return patients[0];
+  async createPatient(patientData: InsertPatient): Promise<Patient> {
+    const { data, error } = await supabase
+      .from('patients')
+      .insert(patientData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating patient:', error);
+      throw new Error('Failed to create patient');
+    }
+    return data as Patient;
   }
 
-  async updatePatient(id: string, updateData: Partial<Patient>): Promise<Patient | undefined> {
-    const patients = await this.db.update(schema.patients).set(updateData).where(eq(schema.patients.id, id)).returning();
-    return patients[0];
+  async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient | undefined> {
+    const { data, error } = await supabase
+      .from('patients')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating patient:', error);
+      return undefined;
+    }
+    return data as Patient;
   }
 
   async getPatients(): Promise<Patient[]> {
-    return await this.db.select().from(schema.patients);
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching patients:', error);
+      return [];
+    }
+    return data as Patient[];
   }
 
   // Donor methods
   async getDonor(id: string): Promise<Donor | undefined> {
-    const donors = await this.db.select().from(schema.donors).where(eq(schema.donors.id, id));
-    return donors[0];
+    const { data, error } = await supabase
+      .from('donors')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching donor:', error);
+      return undefined;
+    }
+    return data as Donor;
   }
 
   async getDonorByUserId(userId: string): Promise<Donor | undefined> {
-    const donors = await this.db.select().from(schema.donors).where(eq(schema.donors.userId, userId));
-    return donors[0];
+    const { data, error } = await supabase
+      .from('donors')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching donor by user ID:', error);
+      return undefined;
+    }
+    return data as Donor;
   }
 
-  async createDonor(insertDonor: InsertDonor): Promise<Donor> {
-    const donors = await this.db.insert(schema.donors).values(insertDonor).returning();
-    return donors[0];
+  async createDonor(donorData: InsertDonor): Promise<Donor> {
+    const { data, error } = await supabase
+      .from('donors')
+      .insert(donorData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating donor:', error);
+      throw new Error('Failed to create donor');
+    }
+    return data as Donor;
   }
 
-  async updateDonor(id: string, updateData: Partial<Donor>): Promise<Donor | undefined> {
-    const donors = await this.db.update(schema.donors).set(updateData).where(eq(schema.donors.id, id)).returning();
-    return donors[0];
+  async updateDonor(id: string, updates: Partial<Donor>): Promise<Donor | undefined> {
+    const { data, error } = await supabase
+      .from('donors')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating donor:', error);
+      return undefined;
+    }
+    return data as Donor;
   }
 
   async getDonorsByBloodGroup(bloodGroup: string): Promise<Donor[]> {
-    const users = await this.db.select().from(schema.users).where(eq(schema.users.bloodGroup, bloodGroup as any));
-    const donors = await this.db.select().from(schema.donors).where(inArray(schema.donors.userId, users.map(u => u.id)));
-    return donors;
+    const { data, error } = await supabase
+      .from('donors')
+      .select(`
+        *,
+        users!inner(*)
+      `)
+      .eq('users.blood_group', bloodGroup);
+
+    if (error) {
+      console.error('Error fetching donors by blood group:', error);
+      return [];
+    }
+    return data as Donor[];
   }
 
   async getAvailableDonors(bloodGroup: string, location?: string): Promise<Donor[]> {
-    return await this.getDonorsByBloodGroup(bloodGroup);
+    const { data, error } = await supabase
+      .from('donors')
+      .select(`
+        *,
+        users!inner(*)
+      `)
+      .eq('available_for_donation', true)
+      .eq('users.blood_group', bloodGroup);
+
+    if (error) {
+      console.error('Error fetching available donors:', error);
+      return [];
+    }
+    return data as Donor[];
   }
 
   // Healthcare Provider methods
   async getHealthcareProvider(id: string): Promise<HealthcareProvider | undefined> {
-    const providers = await this.db.select().from(schema.healthcareProviders).where(eq(schema.healthcareProviders.id, id));
-    return providers[0];
+    const { data, error } = await supabase
+      .from('healthcare_providers')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching healthcare provider:', error);
+      return undefined;
+    }
+    return data as HealthcareProvider;
   }
 
   async getHealthcareProviderByUserId(userId: string): Promise<HealthcareProvider | undefined> {
-    const providers = await this.db.select().from(schema.healthcareProviders).where(eq(schema.healthcareProviders.userId, userId));
-    return providers[0];
+    const { data, error } = await supabase
+      .from('healthcare_providers')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching healthcare provider by user ID:', error);
+      return undefined;
+    }
+    return data as HealthcareProvider;
   }
 
-  async createHealthcareProvider(insertProvider: InsertHealthcareProvider): Promise<HealthcareProvider> {
-    const providers = await this.db.insert(schema.healthcareProviders).values(insertProvider).returning();
-    return providers[0];
+  async createHealthcareProvider(providerData: InsertHealthcareProvider): Promise<HealthcareProvider> {
+    const { data, error } = await supabase
+      .from('healthcare_providers')
+      .insert(providerData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating healthcare provider:', error);
+      throw new Error('Failed to create healthcare provider');
+    }
+    return data as HealthcareProvider;
   }
 
-  async updateHealthcareProvider(id: string, updateData: Partial<HealthcareProvider>): Promise<HealthcareProvider | undefined> {
-    const providers = await this.db.update(schema.healthcareProviders).set(updateData).where(eq(schema.healthcareProviders.id, id)).returning();
-    return providers[0];
+  async updateHealthcareProvider(id: string, updates: Partial<HealthcareProvider>): Promise<HealthcareProvider | undefined> {
+    const { data, error } = await supabase
+      .from('healthcare_providers')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating healthcare provider:', error);
+      return undefined;
+    }
+    return data as HealthcareProvider;
   }
 
   // Transfusion methods
   async getTransfusion(id: string): Promise<Transfusion | undefined> {
-    const transfusions = await this.db.select().from(schema.transfusions).where(eq(schema.transfusions.id, id));
-    return transfusions[0];
+    const { data, error } = await supabase
+      .from('transfusions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching transfusion:', error);
+      return undefined;
+    }
+    return data as Transfusion;
   }
 
-  async createTransfusion(insertTransfusion: InsertTransfusion): Promise<Transfusion> {
-    const transfusions = await this.db.insert(schema.transfusions).values(insertTransfusion).returning();
-    return transfusions[0];
+  async createTransfusion(transfusionData: InsertTransfusion): Promise<Transfusion> {
+    const { data, error } = await supabase
+      .from('transfusions')
+      .insert(transfusionData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating transfusion:', error);
+      throw new Error('Failed to create transfusion');
+    }
+    return data as Transfusion;
   }
 
-  async updateTransfusion(id: string, updateData: Partial<Transfusion>): Promise<Transfusion | undefined> {
-    const transfusions = await this.db.update(schema.transfusions).set(updateData).where(eq(schema.transfusions.id, id)).returning();
-    return transfusions[0];
+  async updateTransfusion(id: string, updates: Partial<Transfusion>): Promise<Transfusion | undefined> {
+    const { data, error } = await supabase
+      .from('transfusions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating transfusion:', error);
+      return undefined;
+    }
+    return data as Transfusion;
   }
 
   async getTransfusionsByPatient(patientId: string): Promise<Transfusion[]> {
-    return await this.db.select().from(schema.transfusions).where(eq(schema.transfusions.patientId, patientId));
+    const { data, error } = await supabase
+      .from('transfusions')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('scheduled_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching transfusions by patient:', error);
+      return [];
+    }
+    return data as Transfusion[];
   }
 
   async getTransfusionsByDonor(donorId: string): Promise<Transfusion[]> {
-    return await this.db.select().from(schema.transfusions).where(eq(schema.transfusions.donorId, donorId));
+    const { data, error } = await supabase
+      .from('transfusions')
+      .select('*')
+      .eq('donor_id', donorId)
+      .order('scheduled_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching transfusions by donor:', error);
+      return [];
+    }
+    return data as Transfusion[];
   }
 
   async getUpcomingTransfusions(): Promise<Transfusion[]> {
-    return await this.db.select().from(schema.transfusions).where(eq(schema.transfusions.status, 'scheduled'));
+    const { data, error } = await supabase
+      .from('transfusions')
+      .select('*')
+      .gte('scheduled_date', new Date().toISOString())
+      .order('scheduled_date', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching upcoming transfusions:', error);
+      return [];
+    }
+    return data as Transfusion[];
   }
 
   // Donor Family methods
   async getDonorFamily(patientId: string): Promise<DonorFamily[]> {
-    return await this.db.select().from(schema.donorFamilies).where(and(eq(schema.donorFamilies.patientId, patientId), eq(schema.donorFamilies.isActive, true)));
+    const { data, error } = await supabase
+      .from('donor_families')
+      .select('*')
+      .eq('patient_id', patientId)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching donor family:', error);
+      return [];
+    }
+    return data as DonorFamily[];
   }
 
   async assignDonorToFamily(patientId: string, donorId: string): Promise<DonorFamily> {
-    const families = await this.db.insert(schema.donorFamilies).values({
-      patientId,
-      donorId,
-      isActive: true,
-      assignedAt: new Date()
-    }).returning();
-    return families[0];
+    const { data, error } = await supabase
+      .from('donor_families')
+      .insert({
+        patient_id: patientId,
+        donor_id: donorId,
+        assigned_at: new Date().toISOString(),
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error assigning donor to family:', error);
+      throw new Error('Failed to assign donor to family');
+    }
+    return data as DonorFamily;
   }
 
   async removeDonorFromFamily(patientId: string, donorId: string): Promise<void> {
-    await this.db.update(schema.donorFamilies)
-      .set({ isActive: false })
-      .where(and(eq(schema.donorFamilies.patientId, patientId), eq(schema.donorFamilies.donorId, donorId)));
+    const { error } = await supabase
+      .from('donor_families')
+      .update({ is_active: false })
+      .eq('patient_id', patientId)
+      .eq('donor_id', donorId);
+
+    if (error) {
+      console.error('Error removing donor from family:', error);
+    }
   }
 
   // Notification methods
   async getNotification(id: string): Promise<Notification | undefined> {
-    const notifications = await this.db.select().from(schema.notifications).where(eq(schema.notifications.id, id));
-    return notifications[0];
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching notification:', error);
+      return undefined;
+    }
+    return data as Notification;
   }
 
-  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
-    const notifications = await this.db.insert(schema.notifications).values(insertNotification).returning();
-    return notifications[0];
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert(notificationData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating notification:', error);
+      throw new Error('Failed to create notification');
+    }
+    return data as Notification;
   }
 
   async getNotificationsByUser(userId: string): Promise<Notification[]> {
-    return await this.db.select().from(schema.notifications).where(eq(schema.notifications.userId, userId));
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching notifications by user:', error);
+      return [];
+    }
+    return data as Notification[];
   }
 
   async markNotificationAsRead(id: string): Promise<void> {
-    await this.db.update(schema.notifications).set({ isRead: true }).where(eq(schema.notifications.id, id));
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error marking notification as read:', error);
+    }
   }
 
   // Emergency Request methods
   async getEmergencyRequest(id: string): Promise<EmergencyRequest | undefined> {
-    const requests = await this.db.select().from(schema.emergencyRequests).where(eq(schema.emergencyRequests.id, id));
-    return requests[0];
+    const { data, error } = await supabase
+      .from('emergency_requests')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching emergency request:', error);
+      return undefined;
+    }
+    return data as EmergencyRequest;
   }
 
-  async createEmergencyRequest(insertRequest: InsertEmergencyRequest): Promise<EmergencyRequest> {
-    const requests = await this.db.insert(schema.emergencyRequests).values(insertRequest).returning();
-    return requests[0];
+  async createEmergencyRequest(requestData: InsertEmergencyRequest): Promise<EmergencyRequest> {
+    const { data, error } = await supabase
+      .from('emergency_requests')
+      .insert(requestData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating emergency request:', error);
+      throw new Error('Failed to create emergency request');
+    }
+    return data as EmergencyRequest;
   }
 
   async getEmergencyRequestsByPatient(patientId: string): Promise<EmergencyRequest[]> {
-    return await this.db.select().from(schema.emergencyRequests).where(eq(schema.emergencyRequests.patientId, patientId));
+    const { data, error } = await supabase
+      .from('emergency_requests')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching emergency requests:', error);
+      return [];
+    }
+    return data as EmergencyRequest[];
   }
 
-  async updateEmergencyRequest(id: string, updateData: Partial<EmergencyRequest>): Promise<EmergencyRequest | undefined> {
-    const requests = await this.db.update(schema.emergencyRequests).set(updateData).where(eq(schema.emergencyRequests.id, id)).returning();
-    return requests[0];
+  async updateEmergencyRequest(id: string, updates: Partial<EmergencyRequest>): Promise<EmergencyRequest | undefined> {
+    const { data, error } = await supabase
+      .from('emergency_requests')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating emergency request:', error);
+      return undefined;
+    }
+    return data as EmergencyRequest;
   }
 }
+
+// Create and export the storage instance
+export const storage: IStorage = new SupabaseStorage();

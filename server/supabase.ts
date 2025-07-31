@@ -1,45 +1,32 @@
-// import { createClient } from '@supabase/supabase-js';
-
-// const supabaseUrl = process.env.SUPABASE_URL!;
-// const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
-
-// export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-// Test script to verify Supabase connection
 import { createClient } from "@supabase/supabase-js";
-// import 'dotenv/config';
 import dotenv from "dotenv";
-dotenv.config(); // ✅ Load variables from .env file
+
+dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ Missing Supabase URL or Anon Key in environment variables.");
+  throw new Error("Supabase configuration is incomplete");
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// import dotenv from "dotenv";
-// dotenv.config(); // ✅ Load variables from .env file
+// Test connection on startup
+(async () => {
+  try {
+    const { data, error, count } = await supabase
+      .from("users")
+      .select("count", { count: "exact" });
 
-// // import { createClient } from "@supabase/supabase-js";
-
-// const supabaseUrl = process.env.SUPABASE_URL;
-// const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-// if (!supabaseUrl || !supabaseAnonKey) {
-//   console.error(
-//     "❌ Missing Supabase URL or Anon Key in environment variables.",
-//   );
-//   process.exit(1);
-// }
-
-// const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// // Test connection
-// (async () => {
-//   const { data, error } = await supabase
-//     .from("your_table_name")
-//     .select("*")
-//     .limit(1);
-//   if (error) {
-//     console.error("❌ Supabase error:", error);
-//   } else {
-//     console.log("✅ Supabase connected successfully. Sample data:", data);
-//   }
-// })();
+    if (error) {
+      console.error("❌ Supabase connection failed:", error.message);
+    } else {
+      console.log("✅ Supabase connected successfully!");
+      console.log("Total users in database:", count);
+    }
+  } catch (err) {
+    console.error("❌ Supabase connection error:", err);
+  }
+})();
