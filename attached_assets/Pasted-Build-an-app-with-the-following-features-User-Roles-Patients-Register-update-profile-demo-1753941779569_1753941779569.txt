@@ -1,0 +1,45 @@
+Build an app with the following features:
+
+User Roles:
+
+Patients: Register, update profile (demographics, diagnosis, blood group, transfusion history, iron chelation therapy, upcoming transfusion date), view assigned donor “family,” track transfusion/ICT adherence, and sync health data (Apple Health, Google Fit on Android or custom form).
+
+Donors: Register, specify blood group and location, view upcoming donation slots, get automated reminders (every 3–4 months), see personal donation log/history, and receive incentive badges.
+
+Healthcare Providers: Approve/monitor transfusion records, verify donor eligibility, communicate securely with patients.
+
+Donor Family Assignment:
+
+Assign 18–20 donors (“family”) to each patient based on location and blood group, using data from the e-RaktKosh API for donor pool optimization.
+
+Donors notified well in advance (3–5 days) of the patient’s next scheduled transfusion—track available vs. required blood units.
+
+If predicted supply falls short, send urgent notifications to remaining family and escalate to a wider network if needed.
+
+Monitoring & Reminders:
+
+Predict and track transfusion frequency per patient, using AI/ML based on transfusion records, hemoglobin trends, and clinical factors.
+
+Reminders for ICT (iron chelation therapy), health checkups, and donations.
+
+Integration: iOS Health app (Apple HealthKit), Android via Google Fit.
+
+Engagement & Education:
+
+Incentive badges, milestone notifications for recurring donors.
+
+In-app educational content for patients, families, and donors.
+
+Optional peer-support, FAQ/chatbot, anonymous donor–patient feedback.
+
+Backend:
+
+Use Supabase for authentication, secure user management, role-based access control, and to store all user, donor, and transfusion data.
+
+Ensure all data sharing is strictly permissions-based, with encryption and audit logs.
+
+Emergency/Backup Features:
+
+Real-time “urgent call” notifications to local blood banks or nearby donors if family pool is insufficient.
+
+Camp/drive locator—integrate and display upcoming blood camps (from e-RaktKosh API if available).
