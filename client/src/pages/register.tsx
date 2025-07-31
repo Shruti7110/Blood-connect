@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/auth";
@@ -41,9 +41,9 @@ export default function Register() {
         location: formData.location || undefined,
         bloodGroup: formData.bloodGroup || undefined,
       });
-      
+
       setUserId(response.user.id);
-      
+
       if (formData.role === 'patient') {
         setStep(2);
         toast({
@@ -70,15 +70,15 @@ export default function Register() {
 
   const handlePatientDetails = async (patientData: any) => {
     if (!userId) return;
-    
+
     setLoading(true);
     try {
       // Get patient profile ID
       const patientProfile = await apiRequest('GET', `/api/patients/user/${userId}`);
-      
+
       // Update patient with detailed information
       await apiRequest('PUT', `/api/patients/${patientProfile.id}`, patientData);
-      
+
       toast({
         title: "Registration Complete",
         description: "Welcome to BloodConnect! Your medical profile has been saved.",
@@ -137,7 +137,7 @@ export default function Register() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="name">Full Name</Label>
               <Input
@@ -148,7 +148,7 @@ export default function Register() {
                 required
               />
             </div>
-            
+
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -160,7 +160,7 @@ export default function Register() {
                 required
               />
             </div>
-            
+
             <div>
               <Label htmlFor="password">Password</Label>
               <Input
@@ -172,7 +172,7 @@ export default function Register() {
                 required
               />
             </div>
-            
+
             <div>
               <Label htmlFor="phone">Phone Number</Label>
               <Input
@@ -182,7 +182,7 @@ export default function Register() {
                 placeholder="Enter your phone number"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="location">Location</Label>
               <Input
@@ -192,7 +192,7 @@ export default function Register() {
                 placeholder="City, State"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="bloodGroup">Blood Group</Label>
               <Select value={formData.bloodGroup} onValueChange={(value) => handleInputChange("bloodGroup", value)}>
@@ -211,21 +211,20 @@ export default function Register() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{" "}
-              <Link href="/login">
-                <a className="text-primary hover:underline">Sign in</a>
-              </Link>
-            </p>
-          </div>
         </CardContent>
+        <CardFooter>
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <span className="underline underline-offset-4 hover:text-primary cursor-pointer" onClick={() => window.location.href = '/login'}>
+              Sign in
+            </span>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

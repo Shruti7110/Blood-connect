@@ -1,4 +1,5 @@
 
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -156,15 +157,16 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE emergency_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE donor_families ENABLE ROW LEVEL SECURITY;
 
--- Basic RLS policies (you can customize these based on your security requirements)
-CREATE POLICY "Users can view their own data" ON users FOR SELECT USING (auth.uid() = id::text);
-CREATE POLICY "Users can update their own data" ON users FOR UPDATE USING (auth.uid() = id::text);
+-- Corrected RLS policies with proper type casting
+CREATE POLICY "Users can view their own data" ON users FOR SELECT USING (auth.uid()::uuid = id);
+CREATE POLICY "Users can update their own data" ON users FOR UPDATE USING (auth.uid()::uuid = id);
 
-CREATE POLICY "Patients can view their own data" ON patients FOR SELECT USING (auth.uid() = user_id::text);
-CREATE POLICY "Patients can update their own data" ON patients FOR UPDATE USING (auth.uid() = user_id::text);
+CREATE POLICY "Patients can view their own data" ON patients FOR SELECT USING (auth.uid()::uuid = user_id);
+CREATE POLICY "Patients can update their own data" ON patients FOR UPDATE USING (auth.uid()::uuid = user_id);
 
-CREATE POLICY "Donors can view their own data" ON donors FOR SELECT USING (auth.uid() = user_id::text);
-CREATE POLICY "Donors can update their own data" ON donors FOR UPDATE USING (auth.uid() = user_id::text);
+CREATE POLICY "Donors can view their own data" ON donors FOR SELECT USING (auth.uid()::uuid = user_id);
+CREATE POLICY "Donors can update their own data" ON donors FOR UPDATE USING (auth.uid()::uuid = user_id);
 
-CREATE POLICY "Healthcare providers can view their own data" ON healthcare_providers FOR SELECT USING (auth.uid() = user_id::text);
-CREATE POLICY "Healthcare providers can update their own data" ON healthcare_providers FOR UPDATE USING (auth.uid() = user_id::text);
+CREATE POLICY "Healthcare providers can view their own data" ON healthcare_providers FOR SELECT USING (auth.uid()::uuid = user_id);
+CREATE POLICY "Healthcare providers can update their own data" ON healthcare_providers FOR UPDATE USING (auth.uid()::uuid = user_id);
+

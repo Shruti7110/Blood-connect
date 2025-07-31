@@ -95,12 +95,9 @@ export default function Login() {
         <CardFooter>
           <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <button 
-              onClick={() => window.location.href = '/register'}
-              className="underline underline-offset-4 hover:text-primary bg-transparent border-none cursor-pointer text-sm"
-            >
+            <span className="underline underline-offset-4 hover:text-primary cursor-pointer" onClick={() => window.location.href = '/register'}>
               Sign up
-            </button>
+            </span>
           </p>
         </CardFooter>
       </Card>
