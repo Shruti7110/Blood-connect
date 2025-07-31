@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/auth";
+import { CardFooter } from "@/components/ui/card";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -91,6 +92,17 @@ export default function Login() {
             <p className="text-xs text-gray-500">Donor: michael.k@example.com | hashed_password</p>
           </div>
         </CardContent>
+        <CardFooter>
+          <p className="text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <button 
+              onClick={() => window.location.href = '/register'}
+              className="underline underline-offset-4 hover:text-primary bg-transparent border-none cursor-pointer text-sm"
+            >
+              Sign up
+            </button>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
