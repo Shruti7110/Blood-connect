@@ -180,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transfusionData = insertTransfusionSchema.parse(req.body);
       const transfusion = await storage.createTransfusion(transfusionData);
       res.status(201).json(transfusion);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Transfusion creation error:", error);
       if (error.name === 'ZodError') {
         res.status(400).json({ message: "Invalid transfusion data", details: error.errors });
@@ -266,28 +266,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get patients linked to a donor
-  app.get("/api/donor-patients/:donorId", async (req, res) => {
+  // Update patient data
+  app.put("/api/patients/:id", async (req, res) => {
     try {
-      const { data, error } = await supabase
-        .from('donor_families')
-        .select(`
-          *,
-          patients!inner(
-            *,
-            users!inner(*)
-          )
-        `)
-        .eq('donor_id', req.params.donorId)
-        .eq('is_active', true);
-
-      if (error) {
-        return res.status(500).json({ message: "Failed to fetch patients" });
+      const updatedPatient = await storage.updatePatient(req.params.id, req.body);
+      if (!updatedPatient) {
+        return res.status(404).json({ message: "Patient not found" });
       }
-
-      res.json(data || []);
+      res.json(updatedPatient);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch patients" });
+      res.status(500).json({ message: "Failed to update patient" });
     }
   });
 
@@ -306,8 +294,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requestData = insertEmergencyRequestSchema.parse(req.body);
       const request = await storage.createEmergencyRequest(requestData);
       res.status(201).json(request);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid emergency request data" });
+    } catch (error: any) {
+      console.error("Emergency request creation error:", error);
+      if (error.name === 'ZodError') {
+        res.status(400).json({ message: "Invalid emergency request data", details: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create emergency request" });
+      }
     }
   });
 

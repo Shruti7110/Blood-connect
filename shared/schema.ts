@@ -144,6 +144,10 @@ export const insertHealthcareProviderSchema = createInsertSchema(healthcareProvi
 export const insertTransfusionSchema = createInsertSchema(transfusions).omit({
   id: true,
   completedDate: true,
+}).extend({
+  scheduledDate: z.string().or(z.date()).transform((val) => 
+    typeof val === 'string' ? new Date(val) : val
+  ),
 });
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
