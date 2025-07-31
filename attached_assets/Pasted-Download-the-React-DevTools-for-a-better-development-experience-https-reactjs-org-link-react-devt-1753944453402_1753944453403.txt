@@ -1,0 +1,23 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=c392113d:337:18
+    at p
+    at div
+    at div
+    at _c9 (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at Login (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/src/pages/login.tsx:29:29)
+    at Route (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=c392113d:323:16)
+    at Switch (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=c392113d:379:17)
+    at AuthWrapper (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/src/components/auth-wrapper.tsx:22:31)
+    at AuthenticatedRouter
+    at Provider (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-O46BVKQA.js?v=f3c6c853:48:15)
+    at TooltipProvider (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=d8f91bef:59:5)
+    at QueryClientProvider (https://e77bca35-290c-4512-9fe9-4a91a11f0d3f-00-1hf3puugjjlzb.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=1596bfe0:2805:3)
+    at App
+printWarning @ chunk-WERSD76P.js:521Understand this error
+api/auth/register:1  Failed to load resource: the server responded with a status of 400 (Bad Request)
