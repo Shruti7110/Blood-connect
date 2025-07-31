@@ -23,9 +23,40 @@ export const users = pgTable("users", {
 export const patients = pgTable("patients", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
+  
+  // Basic patient info
+  dateOfBirth: timestamp("date_of_birth"),
+  weight: text("weight"),
   diagnosis: text("diagnosis"),
-  transfusionHistory: jsonb("transfusion_history").default(sql`'[]'`),
+  thalassemiaType: text("thalassemia_type"),
+  
+  // Current clinical status
+  recentPreTransfusionHb: text("recent_pre_transfusion_hb"),
+  symptomsBetweenTransfusions: text("symptoms_between_transfusions"),
+  poorGrowthHistory: boolean("poor_growth_history").default(false),
+  boneDeformities: boolean("bone_deformities").default(false),
+  recurrentInfections: boolean("recurrent_infections").default(false),
+  organIssuesHistory: text("organ_issues_history"),
+  
+  // Transfusion history
+  transfusionFrequencyPast6Months: text("transfusion_frequency_past_6_months"),
+  unitsPerSession: integer("units_per_session"),
+  usualTransfusionHbLevel: text("usual_transfusion_hb_level"),
+  recentIntervalChanges: text("recent_interval_changes"),
+  
+  // Iron overload and chelation
   ironChelationTherapy: text("iron_chelation_therapy"),
+  chelationMedication: text("chelation_medication"),
+  chelationFrequency: text("chelation_frequency"),
+  lastSerumFerritin: text("last_serum_ferritin"),
+  lastLiverIronMeasurement: text("last_liver_iron_measurement"),
+  adverseReactionsHistory: text("adverse_reactions_history"),
+  
+  // Manual frequency override
+  manualTransfusionFrequency: text("manual_transfusion_frequency"),
+  
+  // Existing fields
+  transfusionHistory: jsonb("transfusion_history").default(sql`'[]'`),
   nextTransfusionDate: timestamp("next_transfusion_date"),
   hemoglobinLevel: text("hemoglobin_level"),
   ironLevels: text("iron_levels"),

@@ -8,8 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/auth";
+import { PatientDetailsForm } from "@/components/patient-details-form";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Register() {
+  const [step, setStep] = useState(1);
+  const [userId, setUserId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -23,12 +27,12 @@ export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleBasicRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await authService.register({
+      const response = await authService.register({
         email: formData.email,
         password: formData.password,
         role: formData.role as 'patient' | 'donor' | 'healthcare_provider',
@@ -37,11 +41,22 @@ export default function Register() {
         location: formData.location || undefined,
         bloodGroup: formData.bloodGroup || undefined,
       });
-      toast({
-        title: "Registration Successful",
-        description: "Welcome to BloodConnect!",
-      });
-      setLocation("/dashboard");
+      
+      setUserId(response.user.id);
+      
+      if (formData.role === 'patient') {
+        setStep(2);
+        toast({
+          title: "Basic Registration Complete",
+          description: "Please provide your medical details for optimal care.",
+        });
+      } else {
+        toast({
+          title: "Registration Successful",
+          description: "Welcome to BloodConnect!",
+        });
+        setLocation("/dashboard");
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -53,9 +68,47 @@ export default function Register() {
     }
   };
 
+  const handlePatientDetails = async (patientData: any) => {
+    if (!userId) return;
+    
+    setLoading(true);
+    try {
+      // Get patient profile ID
+      const patientProfile = await apiRequest('GET', `/api/patients/user/${userId}`);
+      
+      // Update patient with detailed information
+      await apiRequest('PUT', `/api/patients/${patientProfile.id}`, patientData);
+      
+      toast({
+        title: "Registration Complete",
+        description: "Welcome to BloodConnect! Your medical profile has been saved.",
+      });
+      setLocation("/dashboard");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save patient details. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  if (step === 2 && formData.role === 'patient') {
+    return (
+      <div className="min-h-screen bg-background-alt flex items-center justify-center p-4">
+        <PatientDetailsForm 
+          onSubmit={handlePatientDetails}
+          loading={loading}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background-alt flex items-center justify-center p-4">
@@ -70,7 +123,7 @@ export default function Register() {
           <CardDescription>Create your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleBasicRegistration} className="space-y-4">
             <div>
               <Label htmlFor="role">I am a</Label>
               <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
