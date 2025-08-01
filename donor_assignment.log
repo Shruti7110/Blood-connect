@@ -1,0 +1,55 @@
+2025-08-01 08:12:37,039 - INFO - Running donor assignment immediately...
+2025-08-01 08:12:37,112 - INFO - Supabase client initialized successfully
+2025-08-01 08:12:37,112 - INFO - Starting weekly donor assignment process...
+2025-08-01 08:12:37,984 - INFO - HTTP Request: GET https://dsufztpqxgwyyboszowu.supabase.co/rest/v1/patients?select=id%2Cuser_id%2Cusers%21inner%28name%2Cblood_group%2Clocation%29 "HTTP/2 200 OK"
+2025-08-01 08:12:37,989 - INFO - Fetched 2 patients from database
+2025-08-01 08:12:38,743 - INFO - HTTP Request: GET https://dsufztpqxgwyyboszowu.supabase.co/rest/v1/donors?select=id%2Cuser_id%2Clast_donation%2Cavailable_for_donation%2Ctotal_donations%2Cusers%21inner%28name%2Cblood_group%2Clocation%29&available_for_donation=eq.True "HTTP/2 200 OK"
+2025-08-01 08:12:38,745 - INFO - Fetched 42 available donors from database
+2025-08-01 08:12:38,745 - INFO - Processing 2 patients with 42 available donors
+2025-08-01 08:12:39,514 - INFO - HTTP Request: PATCH https://dsufztpqxgwyyboszowu.supabase.co/rest/v1/donor_families?patient_id=eq.ceb8eb30-58bb-45a8-b5bc-cf39d53375b2 "HTTP/2 200 OK"
+2025-08-01 08:12:39,515 - INFO - Deactivated old assignments for patient ceb8eb30-58bb-45a8-b5bc-cf39d53375b2
+2025-08-01 08:12:40,263 - INFO - HTTP Request: POST https://dsufztpqxgwyyboszowu.supabase.co/rest/v1/donor_families?columns=%22assigned_at%22%2C%22is_active%22%2C%22donor_id%22%2C%22patient_id%22 "HTTP/2 201 Created"
+2025-08-01 08:12:40,264 - INFO - Created 20 new assignments for patient ceb8eb30-58bb-45a8-b5bc-cf39d53375b2
+2025-08-01 08:12:40,264 - INFO - Successfully assigned 20 donors to patient Sia Kapoor
+2025-08-01 08:12:40,264 - INFO -   1. Aditya Verma (A+) - Last donated: 8 days ago
+2025-08-01 08:12:40,265 - INFO -   2. Karthik Shetty (O+) - Last donated: 12 days ago
+2025-08-01 08:12:40,265 - INFO -   3. Omkar Deshpande (O-) - Last donated: 74 days ago
+2025-08-01 08:12:40,265 - INFO -   4. Qasim Ahmed (A+) - Last donated: 127 days ago
+2025-08-01 08:12:40,265 - INFO -   5. Harish Gowda (A-) - Last donated: 216 days ago
+2025-08-01 08:12:40,265 - INFO -   6. Shilpa Yadav (O-) - Last donated: 217 days ago
+2025-08-01 08:12:40,265 - INFO -   7. Anjali Hegde (A+) - Last donated: 219 days ago
+2025-08-01 08:12:40,265 - INFO -   8. Nisha Jain (A+) - Last donated: 223 days ago
+2025-08-01 08:12:40,265 - INFO -   9. Santosh Pillai (O+) - Last donated: 224 days ago
+2025-08-01 08:12:40,265 - INFO -   10. Mahesh Rao (A-) - Last donated: 226 days ago
+2025-08-01 08:12:40,265 - INFO -   11. Rashmi Shetty (O-) - Last donated: 227 days ago
+2025-08-01 08:12:40,266 - INFO -   12. Rajesh Kumar (O+) - Last donated: 229 days ago
+2025-08-01 08:12:40,266 - INFO -   13. Lakshmi Iyer (O+) - Last donated: 231 days ago
+2025-08-01 08:12:40,266 - INFO -   14. Pooja Agarwal (A+) - Last donated: 233 days ago
+2025-08-01 08:12:40,266 - INFO -   15. Arjun Menon (O+) - Last donated: 234 days ago
+2025-08-01 08:12:40,266 - INFO -   16. Priya Sharma (A+) - Last donated: 234 days ago
+2025-08-01 08:12:40,266 - INFO -   17. Kavya Nair (A-) - Last donated: 237 days ago
+2025-08-01 08:12:40,266 - INFO -   18. Vikram Patel (O-) - Last donated: 239 days ago
+2025-08-01 08:12:40,266 - INFO -   19. Manjula Das (O+) - Last donated: 241 days ago
+2025-08-01 08:12:40,266 - INFO -   20. Chandan Mehta (O+) - Last donated: 261 days ago
+2025-08-01 08:12:40,992 - INFO - HTTP Request: GET https://dsufztpqxgwyyboszowu.supabase.co/rest/v1/donor_families?select=donor_id&patient_id=eq.ceb8eb30-58bb-45a8-b5bc-cf39d53375b2&is_active=eq.True "HTTP/2 200 OK"
+2025-08-01 08:12:41,737 - INFO - HTTP Request: PATCH https://dsufztpqxgwyyboszowu.supabase.co/rest/v1/donor_families?patient_id=eq.64c64ed0-39b1-4035-a67e-bed3681d4524 "HTTP/2 200 OK"
+2025-08-01 08:12:41,739 - INFO - Deactivated old assignments for patient 64c64ed0-39b1-4035-a67e-bed3681d4524
+2025-08-01 08:12:42,453 - INFO - HTTP Request: POST https://dsufztpqxgwyyboszowu.supabase.co/rest/v1/donor_families?columns=%22assigned_at%22%2C%22is_active%22%2C%22donor_id%22%2C%22patient_id%22 "HTTP/2 201 Created"
+2025-08-01 08:12:42,454 - INFO - Created 13 new assignments for patient 64c64ed0-39b1-4035-a67e-bed3681d4524
+2025-08-01 08:12:42,454 - INFO - Successfully assigned 13 donors to patient Aryan Malhotra
+2025-08-01 08:12:42,454 - INFO -   1. Neha Kapoor (B-) - Last donated: 10 days ago
+2025-08-01 08:12:42,455 - INFO -   2. Jyothi Choudhary (B+) - Last donated: 74 days ago
+2025-08-01 08:12:42,455 - INFO -   3. Farhan Khan (B-) - Last donated: 170 days ago
+2025-08-01 08:12:42,455 - INFO -   4. Radhika Subramanian (B+) - Last donated: 178 days ago
+2025-08-01 08:12:42,455 - INFO -   5. Ramesh Kamath (B+) - Last donated: 218 days ago
+2025-08-01 08:12:42,455 - INFO -   6. Prakash Desai (B+) - Last donated: 222 days ago
+2025-08-01 08:12:42,455 - INFO -   7. Amit Singh (B+) - Last donated: 224 days ago
+2025-08-01 08:12:42,455 - INFO -   8. Meera Krishnan (B+) - Last donated: 229 days ago
+2025-08-01 08:12:42,455 - INFO -   9. Suresh Babu (B+) - Last donated: 232 days ago
+2025-08-01 08:12:42,455 - INFO -   10. Ravi Gupta (B-) - Last donated: 236 days ago
+2025-08-01 08:12:42,455 - INFO -   11. Bhavana Srinivas (B+) - Last donated: 286 days ago
+2025-08-01 08:12:42,455 - INFO -   12. Girish Naidu (O-) - Last donated: 308 days ago
+2025-08-01 08:12:42,455 - INFO -   13. Sachin Bansal (O+) - Last donated: 337 days ago
+2025-08-01 08:12:42,717 - INFO - HTTP Request: GET https://dsufztpqxgwyyboszowu.supabase.co/rest/v1/donor_families?select=donor_id&patient_id=eq.64c64ed0-39b1-4035-a67e-bed3681d4524&is_active=eq.True "HTTP/2 200 OK"
+2025-08-01 08:12:42,718 - INFO - Assignment process completed. Processed 2 patients, created 33 total assignments.
+2025-08-01 08:12:42,718 - INFO - Weekly assignment completed successfully: {'patients_processed': 2, 'total_assignments': 33}

@@ -74,6 +74,19 @@ export const donors = pgTable("donors", {
   donationHistory: jsonb("donation_history").default(sql`'[]'`),
 });
 
+export const donations = pgTable("donations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  donorId: varchar("donor_id").references(() => donors.id).notNull(),
+  patientId: varchar("patient_id").references(() => patients.id), // Optional - allocated to patient or hospital
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  completedDate: timestamp("completed_date"),
+  location: text("location").notNull(),
+  unitsAvailable: integer("units_available").default(2),
+  status: appointmentStatusEnum("status").default("scheduled"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const healthcareProviders = pgTable("healthcare_providers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
@@ -160,6 +173,16 @@ export const insertEmergencyRequestSchema = createInsertSchema(emergencyRequests
   createdAt: true,
 });
 
+export const insertDonationSchema = createInsertSchema(donations).omit({
+  id: true,
+  completedDate: true,
+  createdAt: true,
+}).extend({
+  scheduledDate: z.string().or(z.date()).transform((val) => 
+    typeof val === 'string' ? new Date(val) : val
+  ),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -173,6 +196,8 @@ export type Transfusion = typeof transfusions.$inferSelect;
 export type InsertTransfusion = z.infer<typeof insertTransfusionSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Donation = typeof donations.$inferSelect;
+export type InsertDonation = z.infer<typeof insertDonationSchema>;
 export type EmergencyRequest = typeof emergencyRequests.$inferSelect;
 export type InsertEmergencyRequest = z.infer<typeof insertEmergencyRequestSchema>;
 export type DonorFamily = typeof donorFamilies.$inferSelect;

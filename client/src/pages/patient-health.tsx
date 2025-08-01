@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/navigation";
@@ -21,6 +20,22 @@ export default function PatientHealth({ user }: PatientHealthProps) {
     enabled: !!user.id,
   });
 
+  const { data: transfusions = [] } = useQuery<any[]>({
+    queryKey: ['/api/transfusions/patient', patient?.id],
+    enabled: !!patient?.id,
+  });
+
+  const { data: donorFamily } = useQuery<any>({
+    queryKey: ['/api/donor-family', patient?.id],
+    enabled: !!patient?.id,
+  });
+
+  // Calculate last transfusion from actual transfusion records
+  const completedTransfusions = transfusions.filter((t: any) => t.status === 'completed');
+  const lastTransfusionDate = completedTransfusions.length > 0 
+    ? completedTransfusions[0].scheduledDate || completedTransfusions[0].completedDate
+    : null;
+
   const getTimeSince = (dateString: string) => {
     const days = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / (1000 * 3600 * 24));
     return `${days} days ago`;
@@ -28,9 +43,9 @@ export default function PatientHealth({ user }: PatientHealthProps) {
 
   const getHealthStatus = (value: string, type: string) => {
     if (!value) return { status: 'unknown', color: 'gray' };
-    
+
     const numValue = parseFloat(value);
-    
+
     switch (type) {
       case 'hemoglobin':
         if (numValue >= 10) return { status: 'good', color: 'green' };
@@ -51,17 +66,11 @@ export default function PatientHealth({ user }: PatientHealthProps) {
   return (
     <div className="min-h-screen bg-background-alt">
       <Navigation user={user} />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Health Data & Metrics</h1>
-            <p className="text-gray-600">Track your health metrics and manage your thalassemia care</p>
-          </div>
-          <Button onClick={() => setHealthModalOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Update Health Data
-          </Button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Health Data & Metrics</h1>
+          <p className="text-gray-600">Track your health metrics and manage your thalassemia care</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -109,7 +118,7 @@ export default function PatientHealth({ user }: PatientHealthProps) {
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Last Transfusion</h3>
               <p className="text-2xl font-bold text-gray-900">
-                {patient?.lastTransfusion ? getTimeSince(patient.lastTransfusion) : "Never"}
+                {lastTransfusionDate ? getTimeSince(lastTransfusionDate) : "Never"}
               </p>
               <p className="text-sm text-gray-600">days ago</p>
             </CardContent>
@@ -124,7 +133,7 @@ export default function PatientHealth({ user }: PatientHealthProps) {
                 </div>
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Total Transfusions</h3>
-              <p className="text-2xl font-bold text-gray-900">{patient?.totalTransfusions || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">{completedTransfusions.length}</p>
               <p className="text-sm text-gray-600">lifetime</p>
             </CardContent>
           </Card>

@@ -1,12 +1,12 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Navigation } from "@/components/navigation";
 import { ScheduleModal } from "@/components/schedule-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Droplet, Plus, CheckCircle, AlertTriangle } from "lucide-react";
+import { Calendar, Clock, MapPin, Droplet, Plus, CheckCircle, AlertTriangle, X } from "lucide-react";
 import { type AuthUser } from "@/lib/auth";
 
 interface PatientScheduleProps {
@@ -15,6 +15,7 @@ interface PatientScheduleProps {
 
 export default function PatientSchedule({ user }: PatientScheduleProps) {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: patient } = useQuery<any>({
     queryKey: ['/api/patients/user', user.id],
@@ -24,6 +25,21 @@ export default function PatientSchedule({ user }: PatientScheduleProps) {
   const { data: transfusions = [] } = useQuery<any[]>({
     queryKey: ['/api/transfusions/patient', patient?.id],
     enabled: !!patient?.id,
+  });
+
+  const cancelTransfusionMutation = useMutation({
+    mutationFn: async (transfusionId: string) => {
+      const response = await fetch(`/api/transfusions/${transfusionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+      if (!response.ok) throw new Error('Failed to cancel transfusion');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transfusions/patient', patient?.id] });
+    },
   });
 
   const formatDate = (dateString: string) => {
@@ -115,10 +131,22 @@ export default function PatientSchedule({ user }: PatientScheduleProps) {
                               </div>
                             </div>
                           </div>
-                          <Badge variant={getStatusColor(transfusion.status) as any}>
-                            <StatusIcon className="w-3 h-3 mr-1" />
-                            {transfusion.status}
-                          </Badge>
+                          <div className="flex space-x-2">
+                            <Badge variant={getStatusColor(transfusion.status) as any}>
+                              <StatusIcon className="w-3 h-3 mr-1" />
+                              {transfusion.status}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => cancelTransfusionMutation.mutate(transfusion.id)}
+                              disabled={cancelTransfusionMutation.isPending}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X className="w-3 h-3 mr-1" />
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
                         {transfusion.notes && (
                           <p className="text-sm text-gray-600 mt-3 pl-15">{transfusion.notes}</p>

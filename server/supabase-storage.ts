@@ -4,7 +4,7 @@ import { IStorage } from './storage';
 
 export class SupabaseStorage implements IStorage {
   // User methods
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | null> {
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -72,7 +72,7 @@ export class SupabaseStorage implements IStorage {
       console.error('Error fetching patient by user ID:', error);
       return undefined;
     }
-    
+
     // Map database column names to expected field names
     const mappedData = {
       ...data,
@@ -103,7 +103,7 @@ export class SupabaseStorage implements IStorage {
       lastTransfusion: data.last_transfusion,
       totalTransfusions: data.total_transfusions
     };
-    
+
     return mappedData;
   }
 
@@ -121,7 +121,7 @@ export class SupabaseStorage implements IStorage {
   async updatePatient(id: string, patient: Partial<Patient>): Promise<Patient | undefined> {
     // Map camelCase to snake_case for database
     const dbPatient: any = {};
-    
+
     if (patient.userId !== undefined) dbPatient.user_id = patient.userId;
     if (patient.dateOfBirth !== undefined) dbPatient.date_of_birth = patient.dateOfBirth;
     if (patient.weight !== undefined) dbPatient.weight = patient.weight;
@@ -193,7 +193,7 @@ export class SupabaseStorage implements IStorage {
       lastTransfusion: data.last_transfusion,
       totalTransfusions: data.total_transfusions
     };
-    
+
     return mappedData;
   }
 
@@ -430,7 +430,7 @@ export class SupabaseStorage implements IStorage {
       console.error('Error fetching transfusions:', error);
       return [];
     }
-    
+
     // Map database column names
     const mappedData = (data || []).map(transfusion => ({
       ...transfusion,
@@ -441,7 +441,7 @@ export class SupabaseStorage implements IStorage {
       completedDate: transfusion.completed_date,
       unitsRequired: transfusion.units_required
     }));
-    
+
     return mappedData;
   }
 
@@ -468,8 +468,7 @@ export class SupabaseStorage implements IStorage {
     return data || [];
   }
 
-  // Donor Family methods
-  async getDonorFamily(patientId: string): Promise<DonorFamily[]> {
+  async getDonorFamiliesByPatientId(patientId: string): Promise<any[]> {
     // Get donor family with all related data in one query
     const { data: familyData, error: familyError } = await supabase
       .from('donor_families')
@@ -488,28 +487,103 @@ export class SupabaseStorage implements IStorage {
       return [];
     }
 
-    // Map the data to the expected format
-    const familyWithDetails = familyData.map((family: any) => ({
-      id: family.id,
-      patientId: family.patient_id,
-      donorId: family.donor_id,
-      assignedAt: family.assigned_at,
-      isActive: family.is_active,
-      donor: {
-        ...family.donors,
-        userId: family.donors.user_id,
-        eligibilityStatus: family.donors.eligibility_status,
-        lastDonation: family.donors.last_donation,
-        totalDonations: family.donors.total_donations,
-        availableForDonation: family.donors.available_for_donation,
-        donationHistory: family.donors.donation_history
-      },
-      user: {
-        ...family.donors.users,
-        bloodGroup: family.donors.users.blood_group,
-        createdAt: family.donors.users.created_at
-      }
+    // Return the data in the expected format
+    return familyData.map((item: any) => ({
+      id: item.id,
+      donor_id: item.donor_id,
+      patient_id: item.patient_id,
+      assigned_date: item.assigned_date,
+      is_active: item.is_active,
+      donors: item.donors
     }));
+  }
+
+  async getDonorFamiliesByPatientIdLegacy(patientId: string): Promise<DonorFamily[]> {
+    // Keep the old method for compatibility
+    const { data: familyData, error: familyError } = await supabase
+      .from('donor_families')
+      .select(`
+        *,
+        donors!inner (
+          *,
+          users!inner (*)
+        )
+      `)
+      .eq('patient_id', patientId)
+      .eq('is_active', true);
+
+    if (familyError || !familyData) {
+      console.error('Error fetching donor family:', familyError);
+      return [];
+    }
+
+    // Get donation counts for each donor from transfusions table
+    const donorIds = familyData.map(f => f.donor_id);
+    const { data: donationCounts } = await supabase
+      .from('transfusions')
+      .select('donor_id, status, scheduled_date')
+      .in('donor_id', donorIds);
+
+    // Calculate donation statistics for each donor
+    const donorStats: Record<string, any> = {};
+    if (donationCounts) {
+      donationCounts.forEach((donation: any) => {
+        if (!donorStats[donation.donor_id]) {
+          donorStats[donation.donor_id] = {
+            totalDonations: 0,
+            recentDonations: 0,
+            lastDonation: null
+          };
+        }
+
+        if (donation.status === 'completed') {
+          donorStats[donation.donor_id].totalDonations++;
+
+          // Count recent donations (within last 3 months)
+          const threeMonthsAgo = new Date();
+          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+          if (new Date(donation.scheduled_date) > threeMonthsAgo) {
+            donorStats[donation.donor_id].recentDonations++;
+          }
+
+          // Track most recent donation
+          if (!donorStats[donation.donor_id].lastDonation || 
+              new Date(donation.scheduled_date) > new Date(donorStats[donation.donor_id].lastDonation)) {
+            donorStats[donation.donor_id].lastDonation = donation.scheduled_date;
+          }
+        }
+      });
+    }
+
+    // Map the data to the expected format with calculated statistics
+    const familyWithDetails = familyData.map((family: any) => {
+      const stats = donorStats[family.donor_id] || { totalDonations: 0, recentDonations: 0, lastDonation: null };
+      const availableUnits = Math.max(0, 4 - stats.recentDonations); // Max 4 units, minus recent donations
+
+      return {
+        id: family.id,
+        patientId: family.patient_id,
+        donorId: family.donor_id,
+        assignedAt: family.assigned_at,
+        isActive: family.is_active,
+        donor: {
+          ...family.donors,
+          userId: family.donors.user_id,
+          eligibilityStatus: family.donors.eligibility_status,
+          lastDonation: stats.lastDonation,
+          totalDonations: stats.totalDonations,
+          recentDonations: stats.recentDonations,
+          availableUnits: availableUnits,
+          availableForDonation: family.donors.available_for_donation && availableUnits > 0,
+          donationHistory: family.donors.donation_history
+        },
+        user: {
+          ...family.donors.users,
+          bloodGroup: family.donors.users.blood_group,
+          createdAt: family.donors.users.created_at
+        }
+      };
+    });
 
     return familyWithDetails;
   }
@@ -643,6 +717,71 @@ export class SupabaseStorage implements IStorage {
       .single();
 
     if (error || !data) return undefined;
+    return data;
+  }
+
+  async getDonations(): Promise<Donation[]> {
+    const { data, error } = await this.supabase
+      .from('donations')
+      .select('*');
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getDonationsByDonorId(donorId: string): Promise<Donation[]> {
+    const { data, error } = await this.supabase
+      .from('donations')
+      .select('*')
+      .eq('donor_id', donorId)
+      .order('scheduled_date', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getDonorFamilyByPatientId(patientId: string): Promise<DonorFamily[]> {
+    const { data, error } = await supabase
+      .from('donor_families')
+      .select('*')
+      .eq('patient_id', patientId)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching donor family:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  async getAllDonorFamilies(): Promise<DonorFamily[]> {
+    const { data, error } = await supabase
+      .from('donor_families')
+      .select('*')
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching all donor families:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  async updateDonation(id: string, updates: any): Promise<any> {
+    const { data, error } = await supabase
+      .from('donations')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating donation:', error);
+      throw error;
+    }
+
     return data;
   }
 }

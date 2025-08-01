@@ -21,8 +21,8 @@ export default function Login() {
 
     try {
       await authService.login(email, password);
-      // Navigate immediately without toast to avoid refresh issue
-      setLocation("/dashboard");
+      // Force a page reload to ensure proper authentication state
+      window.location.href = "/dashboard";
     } catch (error) {
       toast({
         variant: "destructive",

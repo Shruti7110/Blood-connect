@@ -1,19 +1,28 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Droplet, Heart, Award, Clock, CheckCircle, MapPin } from "lucide-react";
+import { Calendar, Droplet, Heart, Award, Clock, CheckCircle, MapPin, User, Phone } from "lucide-react";
 import { type AuthUser } from "@/lib/auth";
+import { DonorScheduleModal } from "@/components/donor-schedule-modal";
 
 interface DonorDashboardProps {
   user: AuthUser;
 }
 
 export default function DonorDashboard({ user }: DonorDashboardProps) {
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+
   const { data: donor } = useQuery<any>({
     queryKey: ['/api/donors/user', user.id],
     enabled: !!user.id,
+  });
+
+  const { data: donations = [] } = useQuery<any[]>({
+    queryKey: ['/api/donations/donor', donor?.id],
+    enabled: !!donor?.id,
   });
 
   const { data: transfusions = [] } = useQuery<any[]>({
@@ -22,17 +31,116 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
   });
 
   const { data: myPatients = [] } = useQuery<any[]>({
-    queryKey: ['/api/donor-patients', donor?.id],
+    queryKey: ['/api/donor-families', donor?.id],
     enabled: !!donor?.id,
   });
 
-  const upcomingDonations = transfusions.filter((t: any) => 
-    t.status === "scheduled" && new Date(t.scheduledDate || t.scheduled_date) > new Date()
-  );
+  const upcomingDonations = donations.filter((d: any) => {
+    const donationDate = new Date(d.scheduled_date);
+    return d.status === "scheduled" && donationDate > new Date();
+  });
 
   const completedDonations = transfusions.filter((t: any) => 
     t.status === "completed"
   );
+
+  // Parse donation history from donor data - handle both string, object and array formats
+  const donationHistory = (() => {
+    if (!donor?.donation_history) return [];
+    
+    // If it's already an array, return it
+    if (Array.isArray(donor.donation_history)) {
+      return donor.donation_history;
+    }
+    
+    // If it's an object (not stringified), return it as array
+    if (typeof donor.donation_history === 'object') {
+      return Array.isArray(donor.donation_history) ? donor.donation_history : [];
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof donor.donation_history === 'string') {
+      try {
+        const parsed = JSON.parse(donor.donation_history);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.warn('Failed to parse donation history:', error);
+        return [];
+      }
+    }
+    
+    return [];
+  })();
+
+  // Calculate badges based on real donation history and assignment data
+  const getBadges = () => {
+    const badges = [];
+    const totalDonations = donationHistory.length;
+    const isAssignedToPatient = myPatients.length > 0;
+    
+    // Check if donor is regular (donates every 4 months)
+    const isRegularDonor = donationHistory.length >= 3 && (() => {
+      if (donationHistory.length < 2) return false;
+      
+      // Sort donations by date
+      const sortedDonations = [...donationHistory].sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      
+      // Check if recent donations are within 4-month intervals
+      for (let i = 0; i < Math.min(3, sortedDonations.length - 1); i++) {
+        const current = new Date(sortedDonations[i].date);
+        const next = new Date(sortedDonations[i + 1].date);
+        const monthsDiff = (current.getTime() - next.getTime()) / (1000 * 60 * 60 * 24 * 30);
+        if (monthsDiff > 6) return false; // More than 6 months gap
+      }
+      return true;
+    })();
+
+    // First Donation badge
+    if (totalDonations >= 1) {
+      badges.push({ 
+        name: "First Donation", 
+        icon: Award, 
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        achieved: true 
+      });
+    }
+
+    // Lifesaver badge (assigned to patient)
+    if (isAssignedToPatient) {
+      badges.push({ 
+        name: "Lifesaver", 
+        icon: Heart, 
+        color: "bg-red-100 text-red-800 border-red-200",
+        achieved: true 
+      });
+    }
+
+    // Regular Donor badge
+    if (isRegularDonor) {
+      badges.push({ 
+        name: "Regular Donor", 
+        icon: Droplet, 
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+        achieved: true 
+      });
+    }
+
+    // Hero badge (10+ donations)
+    if (totalDonations >= 10) {
+      badges.push({ 
+        name: "Hero", 
+        icon: Award, 
+        color: "bg-purple-100 text-purple-800 border-purple-200",
+        achieved: true 
+      });
+    }
+
+    return badges;
+  };
+
+  const badges = getBadges();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -52,7 +160,7 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
   return (
     <div className="min-h-screen bg-background-alt">
       <Navigation user={user} />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -63,13 +171,13 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
                 <p className="text-red-100">
                   {upcomingDonations.length > 0 
                     ? `You have ${upcomingDonations.length} upcoming donation(s). Your patients are counting on you!`
-                    : "Thank you for your commitment to saving lives. Check your upcoming donation schedule."
+                    : "Thank you for your commitment to saving lives. Schedule your next donation."
                   }
                 </p>
               </div>
               <div className="mt-4 md:mt-0 flex space-x-4">
                 <div className="text-center">
-                  <p className="text-3xl font-bold">{donor?.totalDonations || 0}</p>
+                  <p className="text-3xl font-bold">{donationHistory.length}</p>
                   <p className="text-red-100 text-sm">Total Donations</p>
                 </div>
                 <div className="text-center">
@@ -81,51 +189,31 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
           </div>
         </div>
 
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Schedule Appointment Button with Badges */}
+        <div className="mb-8 flex items-center gap-4 flex-wrap">
           <Button 
-            variant="outline" 
-            className="p-6 h-auto bg-white hover:shadow-md border border-gray-200 text-left flex flex-col items-start"
+            onClick={() => setScheduleModalOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white px-6 py-3 text-lg"
           >
-            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
-              <Calendar className="w-6 h-6 text-secondary" />
-            </div>
-            <h3 className="font-semibold text-gray-800 mb-2">Check Schedule</h3>
-            <p className="text-gray-600 text-sm">View upcoming donations</p>
+            <Calendar className="w-5 h-5 mr-2" />
+            Schedule Appointment
           </Button>
-
-          <Button 
-            variant="outline" 
-            className="p-6 h-auto bg-white hover:shadow-md border border-gray-200 text-left flex flex-col items-start"
-          >
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <Droplet className="w-6 h-6 text-primary" />
+          
+          {/* Achievement Badges */}
+          {badges.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-gray-600 font-medium">Achievements:</span>
+              {badges.map((badge, index) => {
+                const IconComponent = badge.icon;
+                return (
+                  <div key={index} className={`flex items-center px-3 py-1 rounded-full border text-sm font-medium ${badge.color}`}>
+                    <IconComponent className="w-4 h-4 mr-1" />
+                    {badge.name}
+                  </div>
+                );
+              })}
             </div>
-            <h3 className="font-semibold text-gray-800 mb-2">Donation History</h3>
-            <p className="text-gray-600 text-sm">Track your contributions</p>
-          </Button>
-
-          <Button 
-            variant="outline" 
-            className="p-6 h-auto bg-white hover:shadow-md border border-gray-200 text-left flex flex-col items-start"
-          >
-            <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center mb-4">
-              <Heart className="w-6 h-6 text-success" />
-            </div>
-            <h3 className="font-semibold text-gray-800 mb-2">Patient Updates</h3>
-            <p className="text-gray-600 text-sm">See how you're helping</p>
-          </Button>
-
-          <Button 
-            variant="outline" 
-            className="p-6 h-auto bg-white hover:shadow-md border border-gray-200 text-left flex flex-col items-start"
-          >
-            <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center mb-4">
-              <Award className="w-6 h-6 text-warning" />
-            </div>
-            <h3 className="font-semibold text-gray-800 mb-2">My Badges</h3>
-            <p className="text-gray-600 text-sm">View achievements</p>
-          </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -137,7 +225,7 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
                   <h3 className="text-lg font-semibold text-gray-800">Upcoming Donations</h3>
                   <Button variant="ghost" size="sm">View All</Button>
                 </div>
-                
+
                 <div className="space-y-4">
                   {upcomingDonations.length > 0 ? (
                     upcomingDonations.map((donation: any) => (
@@ -147,10 +235,10 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-800">Blood Donation</h4>
-                          <p className="text-sm text-gray-600">{formatDate(donation.scheduledDate)}</p>
+                          <p className="text-sm text-gray-600">{formatDate(donation.scheduled_date)}</p>
                           <p className="text-sm text-secondary">{donation.location}</p>
                         </div>
-                        <Badge variant="destructive">Urgent</Badge>
+                        <Badge variant="destructive">Scheduled</Badge>
                       </div>
                     ))
                   ) : (
@@ -178,135 +266,73 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
             </Card>
           </div>
 
-          {/* Donor Stats & Achievements */}
+          {/* Patient Info & Badges */}
           <div className="space-y-6">
-            {/* Donor Stats */}
-            <Card>
+            {/* Patient You're Helping */}
+            <Card className="ring-2 ring-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/30">
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-6">Your Impact</h3>
-                
+                <h3 className="text-lg font-semibold text-primary mb-6 flex items-center">
+                  <Heart className="w-5 h-5 mr-2 text-primary" />
+                  Patient You're Helping
+                </h3>
+
                 <div className="space-y-4">
-                  <div className="text-center p-4 bg-secondary/5 rounded-lg">
-                    <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center mx-auto mb-2">
-                      <Heart className="w-6 h-6 text-white" />
+                  {myPatients.length > 0 ? (
+                    myPatients.slice(0, 1).map((patient: any) => (
+                      <div key={patient.id} className="p-4 bg-white rounded-lg border-2 border-primary/30 shadow-sm">
+                        <div className="flex items-center mb-3">
+                          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center mr-3">
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-800">{patient.name || patient.users?.name || 'Patient'}</h4>
+                            <p className="text-sm text-gray-600">Blood Group: {patient.bloodGroup || patient.users?.blood_group || 'Unknown'}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Condition:</span>
+                            <span className="font-medium">Thalassemia</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Location:</span>
+                            <span className="font-medium">{patient.location || patient.users?.location || 'Not specified'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Last Transfusion:</span>
+                            <span className="font-medium">{patient.lastTransfusion ? getTimeSince(patient.lastTransfusion) : 'Not available'}</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 p-3 bg-white rounded border">
+                          <p className="text-sm text-gray-700">
+                            "Thanks to donors like you, I can live a normal life. Your generosity means everything to my family and me."
+                          </p>
+                          <p className="text-xs text-gray-500 mt-2">- Patient's message</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <User className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p className="font-medium mb-2">No patients assigned yet</p>
+                      <p className="text-sm">You will be assigned to patients who need your blood type soon.</p>
+                      <p className="text-sm mt-2 text-primary">Our matching system runs weekly to connect you with patients in your area.</p>
                     </div>
-                    <p className="text-2xl font-bold text-secondary">{(donor?.totalDonations || 0) * 3}</p>
-                    <p className="text-sm text-gray-600">Lives Potentially Saved</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <p className="text-lg font-semibold text-gray-800">{donor?.totalDonations || 0}</p>
-                      <p className="text-xs text-gray-600">Total Donations</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-semibold text-gray-800">
-                        {donor?.lastDonation ? getTimeSince(donor.lastDonation) : 'Never'}
-                      </p>
-                      <p className="text-xs text-gray-600">Last Donation</p>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-600">Eligibility Status</span>
-                      <span className="flex items-center text-success text-sm">
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Eligible
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Blood Group</span>
-                      <span className="font-medium">{user.bloodGroup}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Achievement Badges */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-6">Achievement Badges</h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Sample badges */}
-                  <div className="text-center p-3 bg-warning/10 rounded-lg border border-warning/20">
-                    <Award className="w-8 h-8 text-warning mx-auto mb-2" />
-                    <p className="text-xs font-medium">First Donation</p>
-                  </div>
-                  
-                  <div className="text-center p-3 bg-success/10 rounded-lg border border-success/20">
-                    <Heart className="w-8 h-8 text-success mx-auto mb-2" />
-                    <p className="text-xs font-medium">Lifesaver</p>
-                  </div>
-                  
-                  <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/20">
-                    <Droplet className="w-8 h-8 text-primary mx-auto mb-2" />
-                    <p className="text-xs font-medium">Regular Donor</p>
-                  </div>
-                  
-                  <div className="text-center p-3 bg-gray-100 rounded-lg border border-gray-200 opacity-50">
-                    <Award className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-xs font-medium text-gray-400">Hero</p>
-                  </div>
-                </div>
-                
-                <Button variant="outline" className="w-full mt-4">
-                  View All Badges
-                </Button>
-              </CardContent>
-            </Card>
+            
           </div>
         </div>
-
-        {/* Recent Activity */}
-        <div className="mt-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-800">Recent Activity</h3>
-                <Button variant="ghost" size="sm">View All</Button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-start space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className="w-10 h-10 bg-success/10 rounded-full flex items-center justify-center">
-                    <Droplet className="w-5 h-5 text-success" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">Donation completed successfully</p>
-                    <p className="text-sm text-gray-600">Donated 2 units for Sarah Chen's transfusion</p>
-                    <p className="text-xs text-gray-500 mt-1">February 28, 2024 at 10:00 AM</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className="w-10 h-10 bg-warning/10 rounded-full flex items-center justify-center">
-                    <Award className="w-5 h-5 text-warning" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">New badge earned</p>
-                    <p className="text-sm text-gray-600">Congratulations! You've earned the "Lifesaver" badge</p>
-                    <p className="text-xs text-gray-500 mt-1">February 28, 2024 at 11:00 AM</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">Upcoming donation reminder</p>
-                    <p className="text-sm text-gray-600">You have a scheduled donation on March 15th</p>
-                    <p className="text-xs text-gray-500 mt-1">February 25, 2024 at 9:00 AM</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
+
+      <DonorScheduleModal 
+        isOpen={scheduleModalOpen}
+        onClose={() => setScheduleModalOpen(false)}
+        donorId={donor?.id}
+      />
     </div>
   );
 }

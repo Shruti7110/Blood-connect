@@ -9,11 +9,15 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import PatientDashboard from "@/pages/patient-dashboard";
 import PatientFamily from "@/pages/patient-family";
-import PatientSchedule from "@/pages/patient-schedule";
 import PatientHealth from "@/pages/patient-health";
+import PatientSchedule from "@/pages/patient-schedule";
 import PatientEducation from "@/pages/patient-education";
+import ProviderDashboard from "@/pages/provider-dashboard";
+import HospitalDashboard from "@/pages/hospital-dashboard";
+import HospitalPatients from "@/pages/hospital-patients";
+import HospitalDonors from "@/pages/hospital-donors";
 import DonorDashboard from "@/pages/donor-dashboard";
-import ProviderDashboard from "./pages/provider-dashboard";
+import DonorDonations from "@/pages/donor-donations";
 
 function AuthenticatedRouter() {
   return (
@@ -34,7 +38,7 @@ function AuthenticatedRouter() {
           <Route path="/dashboard" component={() => {
             if (user.role === 'patient') return <PatientDashboard user={user} />;
             if (user.role === 'donor') return <DonorDashboard user={user} />;
-            if (user.role === 'healthcare_provider') return <ProviderDashboard user={user} />;
+            if (user.role === 'healthcare_provider') return <HospitalDashboard user={user} />;
             return <NotFound />;
           }} />
           <Route path="/family" component={() => {
@@ -53,7 +57,7 @@ function AuthenticatedRouter() {
           <Route path="/">
             {user.role === 'patient' && <PatientDashboard user={user} />}
             {user.role === 'donor' && <DonorDashboard user={user} />}
-            {user.role === 'healthcare_provider' && <ProviderDashboard user={user} />}
+            {user.role === 'healthcare_provider' && <HospitalDashboard user={user} />}
           </Route>
 
           {/* Role-specific routes */}
@@ -68,18 +72,16 @@ function AuthenticatedRouter() {
 
           {user.role === 'donor' && (
             <>
-              <Route path="/donations" component={() => <DonorDashboard user={user} />} />
-              <Route path="/schedule" component={() => <DonorDashboard user={user} />} />
-              <Route path="/badges" component={() => <DonorDashboard user={user} />} />
+              <Route path="/dashboard" component={() => <DonorDashboard user={user} />} />
+              <Route path="/donations" component={() => <DonorDonations user={user} />} />
               <Route path="/education" component={() => <PatientEducation user={user} />} />
             </>
           )}
 
           {user.role === 'healthcare_provider' && (
             <>
-              <Route path="/patients" component={() => <ProviderDashboard user={user} />} />
-              <Route path="/transfusions" component={() => <ProviderDashboard user={user} />} />
-              <Route path="/donors" component={() => <ProviderDashboard user={user} />} />
+              <Route path="/hospital-patients" component={() => <HospitalPatients user={user} />} />
+              <Route path="/hospital-donors" component={() => <HospitalDonors user={user} />} />
               <Route path="/education" component={() => <PatientEducation user={user} />} />
             </>
           )}

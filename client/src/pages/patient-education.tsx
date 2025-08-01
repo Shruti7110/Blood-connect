@@ -106,7 +106,11 @@ export default function PatientEducation({ user }: PatientEducationProps) {
                     </div>
                   )}
 
-                  <Button className="w-full" variant="outline">
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => window.open(content.url, '_blank')}
+                  >
                     <ExternalLink className="w-4 h-4 mr-2" />
                     Read More
                   </Button>
@@ -116,51 +120,7 @@ export default function PatientEducation({ user }: PatientEducationProps) {
           })}
         </div>
 
-        {/* Categories Overview */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Browse by Category</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-8 h-8 text-red-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Thalassemia Basics</h3>
-                <p className="text-sm text-gray-600">Understanding your condition</p>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Activity className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Transfusion Care</h3>
-                <p className="text-sm text-gray-600">Managing your treatments</p>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Stethoscope className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Iron Management</h3>
-                <p className="text-sm text-gray-600">Chelation therapy guidance</p>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-purple-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Lifestyle</h3>
-                <p className="text-sm text-gray-600">Living well with thalassemia</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        
       </div>
     </div>
   );

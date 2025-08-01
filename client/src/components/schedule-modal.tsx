@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -17,7 +18,8 @@ interface ScheduleModalProps {
 
 export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps) {
   const [scheduledDate, setScheduledDate] = useState<string>("");
-  const [location, setLocation] = useState<string>("St. Mary's Hospital - Room 304");
+  const [time, setTime] = useState<string>("10:00");
+  const [location, setLocation] = useState<string>("Manipal Hospital, Whitefield");
   const [notes, setNotes] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -46,13 +48,14 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
 
   const resetForm = () => {
     setScheduledDate("");
-    setLocation("St. Mary's Hospital - Room 304");
+    setTime("10:00");
+    setLocation("Manipal Hospital, Whitefield");
     setNotes("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!scheduledDate) {
+    if (!scheduledDate || !time) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -61,9 +64,10 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
       return;
     }
 
+    const dateTimeString = `${scheduledDate}T${time}:00`;
     createTransfusion.mutate({
       patientId,
-      scheduledDate: new Date(scheduledDate).toISOString(),
+      scheduledDate: new Date(dateTimeString).toISOString(),
       location,
       notes,
       unitsRequired: 2,
@@ -72,10 +76,10 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby="schedule-description">
         <DialogHeader>
           <DialogTitle>Schedule Transfusion</DialogTitle>
-          <p className="text-sm text-gray-600">Schedule your next blood transfusion appointment</p>
+          <p id="schedule-description" className="text-sm text-gray-600">Schedule your next blood transfusion appointment</p>
         </DialogHeader>
 
         <div className="mb-6">
@@ -93,24 +97,48 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="date">Date and Time</Label>
+              <Label htmlFor="date">Date</Label>
               <Input
                 id="date"
-                type="datetime-local"
+                type="date"
                 value={scheduledDate}
                 onChange={(e) => setScheduledDate(e.target.value)}
-                min={new Date().toISOString().slice(0, 16)}
+                min={new Date().toISOString().slice(0, 10)}
               />
             </div>
 
             <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Hospital and room number"
-              />
+              <Label htmlFor="time">Time</Label>
+              <Select value={time} onValueChange={setTime}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 13 }, (_, i) => {
+                    const hour = (i + 9).toString().padStart(2, '0');
+                    return ['00', '15', '30', '45'].map(minute => (
+                      <SelectItem key={`${hour}:${minute}`} value={`${hour}:${minute}`}>
+                        {hour}:{minute}
+                      </SelectItem>
+                    ));
+                  }).flat()}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="location">Hospital</Label>
+              <Select value={location} onValueChange={setLocation}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select hospital" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Manipal Hospital, Whitefield">Manipal Hospital, Whitefield</SelectItem>
+                  <SelectItem value="Apollo Hospital, Bannerghatta Road">Apollo Hospital, Bannerghatta Road</SelectItem>
+                  <SelectItem value="Fortis Hospital, Cunningham Road">Fortis Hospital, Cunningham Road</SelectItem>
+                  <SelectItem value="Narayana Health, Electronic City">Narayana Health, Electronic City</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>

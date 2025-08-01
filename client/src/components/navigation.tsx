@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { Bell, Heart, User } from "lucide-react";
+import { Bell, Heart, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { authService, type AuthUser } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 
@@ -38,15 +39,13 @@ export function Navigation({ user }: NavigationProps) {
         return [
           { href: '/dashboard', label: 'Dashboard', active: location === '/dashboard' },
           { href: '/donations', label: 'My Donations', active: location === '/donations' },
-          { href: '/schedule', label: 'Schedule', active: location === '/schedule' },
-          { href: '/badges', label: 'Badges', active: location === '/badges' },
+          { href: '/education', label: 'Education', active: location === '/education' }
         ];
       case 'healthcare_provider':
         return [
           { href: '/dashboard', label: 'Dashboard', active: location === '/dashboard' },
-          { href: '/patients', label: 'Patients', active: location === '/patients' },
-          { href: '/transfusions', label: 'Transfusions', active: location === '/transfusions' },
-          { href: '/donors', label: 'Donors', active: location === '/donors' },
+          { href: '/hospital-patients', label: 'Patients', active: location === '/hospital-patients' },
+          { href: '/hospital-donors', label: 'Donors', active: location === '/hospital-donors' },
         ];
       default:
         return [];
@@ -96,18 +95,45 @@ export function Navigation({ user }: NavigationProps) {
               )}
             </Button>
 
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-gray-600" />
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium">{user.name}</p>
-                <p className="text-xs text-gray-500 capitalize">{user.role.replace('_', ' ')}</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Logout
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-2 p-2">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-gray-600" />
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs text-gray-500 capitalize">{user.role.replace('_', ' ')}</p>
+                  </div>
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <div className="px-3 py-2">
+                  <p className="font-medium">{user.name}</p>
+                  <p className="text-sm text-gray-500 capitalize">{user.role.replace('_', ' ')}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <div className="px-3 py-2 space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Blood Group:</span>
+                    <span className="text-sm font-medium">{user.blood_group || 'Not set'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Phone:</span>
+                    <span className="text-sm font-medium">{user.phone || 'Not set'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Location:</span>
+                    <span className="text-sm font-medium">{user.location || 'Not set'}</span>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
