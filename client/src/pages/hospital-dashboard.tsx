@@ -15,7 +15,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     enabled: !!user.id,
   });
 
-  const { data: todayAppointments } = useQuery({
+  const { data: todayAppointmentsData } = useQuery({
     queryKey: ['appointments', 'today', provider?.id],
     queryFn: () => apiRequest('GET', `/api/appointments/today/${provider?.id}`),
     enabled: !!provider?.id,
@@ -123,7 +123,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {todayAppointments?.patientAppointments?.length || 0}
+                {todayAppointmentsData?.patientAppointments?.length || 0}
               </div>
               <p className="text-xs text-muted-foreground">At your location today</p>
             </CardContent>
@@ -136,7 +136,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {todayAppointments?.donorAppointments?.length || 0}
+                {todayAppointmentsData?.donorAppointments?.length || 0}
               </div>
               <p className="text-xs text-muted-foreground">At your location today</p>
             </CardContent>

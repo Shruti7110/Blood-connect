@@ -35,18 +35,21 @@ export function Navigation({ user }: NavigationProps) {
           { href: '/schedule', label: 'Schedule', active: location === '/schedule' },
           { href: '/health', label: 'Health Data', active: location === '/health' },
           { href: '/education', label: 'Education', active: location === '/education' },
+          { href: '/patient-assistant', label: 'AI Assistant', active: location === '/patient-assistant' },
         ];
       case 'donor':
         return [
           { href: '/dashboard', label: 'Dashboard', active: location === '/dashboard' },
           { href: '/donations', label: 'My Donations', active: location === '/donations' },
-          { href: '/education', label: 'Education', active: location === '/education' }
+          { href: '/education', label: 'Education', active: location === '/education' },
+          { href: '/donor-assistant', label: 'AI Assistant', active: location === '/donor-assistant' },
         ];
       case 'healthcare_provider':
         return [
           { href: '/dashboard', label: 'Dashboard', active: location === '/dashboard' },
           { href: '/hospital-patients', label: 'Patients', active: location === '/hospital-patients' },
           { href: '/hospital-donors', label: 'Donors', active: location === '/hospital-donors' },
+          { href: '/provider-assistant', label: 'AI Assistant', active: location === '/provider-assistant' },
         ];
       default:
         return [];

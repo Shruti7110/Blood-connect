@@ -18,6 +18,9 @@ import HospitalPatients from "@/pages/hospital-patients";
 import HospitalDonors from "@/pages/hospital-donors";
 import DonorDashboard from "@/pages/donor-dashboard";
 import DonorDonations from "@/pages/donor-donations";
+import DonorAssistant from './pages/donor-assistant';
+import PatientAssistant from './pages/patient-assistant';
+import ProviderAssistant from './pages/provider-assistant';
 
 function AuthenticatedRouter() {
   return (
@@ -85,7 +88,9 @@ function AuthenticatedRouter() {
               <Route path="/education" component={() => <PatientEducation user={user} />} />
             </>
           )}
-
+           <Route path="/donor-assistant" component={() => <DonorAssistant user={user} />} />
+              <Route path="/patient-assistant" component={() => <PatientAssistant user={user} />} />
+              <Route path="/provider-assistant" component={() => <ProviderAssistant user={user} />} />
           <Route component={NotFound} />
         </Switch>
       )}

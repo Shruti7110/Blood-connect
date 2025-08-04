@@ -2,7 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { supabase } from "./supabase";
 import { insertUserSchema, insertPatientSchema, insertDonorSchema, insertHealthcareProviderSchema, insertPatientTransfusionSchema, insertNotificationSchema, insertEmergencyRequestSchema, insertDonorDonationSchema } from "@shared/schema";
+import { AuthenticatedRequest, AuthMiddleware } from './storage';
 import { SupabaseStorage } from './supabase-storage';
+import { handleAIChat } from './ai-assistant';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Add user validation endpoint
@@ -22,7 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", async (req, res) => {
     try {
       console.log("Registration request body:", JSON.stringify(req.body, null, 2));
-      
+
       const userData = insertUserSchema.parse(req.body);
       console.log("Parsed user data:", JSON.stringify(userData, null, 2));
 
@@ -845,8 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         `)
         .gte('scheduled_date', startOfDay.toISOString())
-        .lt('scheduled_date', endOfDay.toISOString())
-        .eq('location', providerLocation)
+        .lt('scheduled_date', endOfDay.toISOString())        .eq('location', providerLocation)
         .eq('status', 'scheduled');
 
       // Get donor donations for today at this location
@@ -888,6 +889,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching all donor families:", error);
       res.status(500).json({ error: "Failed to fetch donor families" });
     }
+  });
+
+    // AI Assistant Chat endpoint
+    app.post("/api/ai/chat", AuthMiddleware, async (req: AuthenticatedRequest, res) => {
+      try {
+          const user = req.user;
+          if (!user) {
+              return res.status(401).json({ message: "User not authenticated." });
+          }
+          const message = req.body.message;
+          if (!message) {
+              return res.status(400).json({ message: "Message is required." });
+          }
+          const response = await handleAIChat(message, user);
+          res.json({ response });
+      } catch (error) {
+          console.error("AI Chat error:", error);
+          res.status(500).json({ message: "Failed to process AI chat request." });
+      }
   });
 
   const httpServer = createServer(app);
