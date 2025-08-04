@@ -52,9 +52,9 @@ class BloodDonationAssistant:
         7. **General information about blood donation process and requirements**
         
         Database Tables to Use:
-        - For donation appointments: 'donors_donations' table (filter by donor_id = {self.donor_id})
-        - For donor profile: 'donors' table joined with 'users' table (filter by user_id = {self.user_id})
-        - For donor families: 'donor_families' table (filter by donor_id = {self.donor_id})
+        - For donation appointments: 'donors_donations' table (filter by donor_id = '{self.donor_id}')
+        - For donor profile: 'donors' table joined with 'users' table (filter by user_id = '{self.user_id}')
+        - For donor families: 'donor_families' table (filter by donor_id = '{self.donor_id}')
         
         When querying the database:
         1. Always use WHERE clauses to filter results for the current user only
@@ -88,10 +88,10 @@ class BloodDonationAssistant:
         8. **Educational content about their condition and treatment**
         
         Database Tables to Use:
-        - For transfusion appointments: 'patient_transfusions' table (filter by patient_id = {self.patient_id})
-        - For patient profile: 'patients' table joined with 'users' table (filter by user_id = {self.user_id})
-        - For donor families: 'donor_families' table (filter by patient_id = {self.patient_id})
-        - For health metrics: 'health_metrics' table (filter by patient_id = {self.patient_id})
+        - For transfusion appointments: 'transfusions' table (filter by patient_id = '{self.patient_id}')
+        - For patient profile: 'patients' table joined with 'users' table (filter by user_id = '{self.user_id}')
+        - For donor families: 'donor_families' table (filter by patient_id = '{self.patient_id}')
+        - For health data: patient profile contains health metrics
         
         When querying the database:
         1. Always use WHERE clauses to filter results for the current user only
@@ -125,11 +125,11 @@ class BloodDonationAssistant:
         8. **Coordinating between donors and patients at your facility**
         
         Database Tables to Use:
-        - For your hospital details: 'healthcare_providers' table (filter by user_id = {self.user_id})
-        - For appointments at your location: 'patient_transfusions' and 'donors_donations' tables (filter by location)
+        - For your hospital details: 'healthcare_providers' table (filter by user_id = '{self.user_id}')
+        - For appointments at your location: 'transfusions' and 'donors_donations' tables (filter by location)
         - For patient information: 'patients' table joined with 'users' table
         - For donor information: 'donors' table joined with 'users' table
-        - For health metrics: 'health_metrics' table
+        - For health data: patient profiles contain health metrics
         
         When querying the database:
         1. First get your hospital location from healthcare_providers table
@@ -196,7 +196,7 @@ class BloodDonationAssistant:
     async def process_message(self, message: str) -> str:
         """Process a user message and return response"""
         try:
-            agent, mcp_server = await create_agent_and_mcp()
+            agent, mcp_server = await self.create_agent_and_mcp()
             
             async with mcp_server:
                 # Include user context in the message

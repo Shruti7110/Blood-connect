@@ -54,7 +54,7 @@ export async function handleAIChat(req: Request, res: Response) {
     };
 
     // Path to the Python script
-    const pythonScriptPath = path.join(__dirname, 'talking_assistant.py');
+    const pythonScriptPath = path.join(import.meta.dirname, 'talking_assistant.py');
 
     // Run the Python script with user data and message
     const pythonProcess = spawn('python3', [

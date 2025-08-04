@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Patient, type InsertPatient, type Donor, type InsertDonor, type HealthcareProvider, type InsertHealthcareProvider, type Transfusion, type InsertTransfusion, type Notification, type InsertNotification, type EmergencyRequest, type InsertEmergencyRequest, type DonorFamily } from "@shared/schema";
+import { type User, type InsertUser, type Patient, type InsertPatient, type Donor, type InsertDonor, type HealthcareProvider, type InsertHealthcareProvider, type PatientTransfusion, type InsertPatientTransfusion, type Notification, type InsertNotification, type EmergencyRequest, type InsertEmergencyRequest, type DonorFamily } from "@shared/schema";
 import { supabase } from './supabase';
 import { IStorage } from './storage';
 
@@ -11,7 +11,7 @@ export class SupabaseStorage implements IStorage {
       .eq('id', id)
       .single();
 
-    if (error || !data) return undefined;
+    if (error || !data) return null;
     return data;
   }
 
@@ -692,5 +692,94 @@ export class SupabaseStorage implements IStorage {
     }
 
     return data || [];
+  }
+
+  // Transfusion methods
+  async getTransfusionsByPatient(patientId: string): Promise<PatientTransfusion[]> {
+    const { data, error } = await supabase
+      .from('patient_transfusions')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('scheduled_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching patient transfusions:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  async createTransfusion(transfusion: InsertPatientTransfusion): Promise<PatientTransfusion> {
+    // Map camelCase to snake_case for database
+    const dbTransfusion = {
+      patient_id: transfusion.patientId,
+      donor_id: transfusion.donorId || null,
+      provider_id: transfusion.providerId || null,
+      scheduled_date: transfusion.scheduledDate,
+      status: transfusion.status || 'scheduled',
+      units_required: transfusion.unitsRequired || 1,
+      location: transfusion.location || null,
+      notes: transfusion.notes || null
+    };
+
+    const { data, error } = await supabase
+      .from('patient_transfusions')
+      .insert(dbTransfusion)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Error creating transfusion:', error);
+      throw new Error('Failed to create transfusion');
+    }
+
+    // Map back to camelCase
+    return {
+      ...data,
+      patientId: data.patient_id,
+      donorId: data.donor_id,
+      providerId: data.provider_id,
+      scheduledDate: data.scheduled_date,
+      completedDate: data.completed_date,
+      unitsRequired: data.units_required
+    };
+  }
+
+  async updateTransfusion(id: string, updates: Partial<PatientTransfusion>): Promise<PatientTransfusion | undefined> {
+    // Map camelCase to snake_case for database
+    const dbUpdates: any = {};
+    if (updates.patientId !== undefined) dbUpdates.patient_id = updates.patientId;
+    if (updates.donorId !== undefined) dbUpdates.donor_id = updates.donorId;
+    if (updates.providerId !== undefined) dbUpdates.provider_id = updates.providerId;
+    if (updates.scheduledDate !== undefined) dbUpdates.scheduled_date = updates.scheduledDate;
+    if (updates.completedDate !== undefined) dbUpdates.completed_date = updates.completedDate;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.unitsRequired !== undefined) dbUpdates.units_required = updates.unitsRequired;
+    if (updates.location !== undefined) dbUpdates.location = updates.location;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+
+    const { data, error } = await supabase
+      .from('patient_transfusions')
+      .update(dbUpdates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Error updating transfusion:', error);
+      return undefined;
+    }
+
+    // Map back to camelCase
+    return {
+      ...data,
+      patientId: data.patient_id,
+      donorId: data.donor_id,
+      providerId: data.provider_id,
+      scheduledDate: data.scheduled_date,
+      completedDate: data.completed_date,
+      unitsRequired: data.units_required
+    };
   }
 }

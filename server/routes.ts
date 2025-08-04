@@ -623,7 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const patientId = donorFamilies && donorFamilies.length > 0 ? donorFamilies[0].patient_id : null;
 
       // Try to insert with minimal required fields first
-      const insertData = {
+      const insertData: any = {
         donor_id: donationData.donorId,
         scheduled_date: donationData.scheduledDate,
         location: donationData.location,

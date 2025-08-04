@@ -11,79 +11,22 @@ export function AuthMiddleware(req: AuthenticatedRequest, res: any, next: any) {
   if (!authHeader) {
     return res.status(401).json({ message: 'No authorization header' });
   }
-  
+
   // For now, just pass through - you can implement proper JWT validation here
   next();
 }
 
 export interface IStorage {
-  // User management
-  createUser(user: Omit<User, 'id' | 'createdAt'>): Promise<User>;
+  // User methods
   getUser(id: string): Promise<User | null>;
-  getUserByEmail(email: string): Promise<User | null>;
-  updateUser(id: string, updates: Partial<User>): Promise<User | null>;
-  deleteUser(id: string): Promise<boolean>;
-  
-  // Patient management
-  createPatient(patient: Omit<Patient, 'id'>): Promise<Patient>;
-  getPatient(id: string): Promise<Patient | null>;
-  getPatientByUserId(userId: string): Promise<Patient | null>;
-  updatePatient(id: string, updates: Partial<Patient>): Promise<Patient | null>;
-  getPatients(): Promise<Patient[]>;
-  
-  // Donor management
-  createDonor(donor: Omit<Donor, 'id'>): Promise<Donor>;
-  getDonor(id: string): Promise<Donor | null>;
-  getDonorByUserId(userId: string): Promise<Donor | null>;
-  updateDonor(id: string, updates: Partial<Donor>): Promise<Donor | null>;
-  getDonors(): Promise<Donor[]>;
-  getAvailableDonors(): Promise<Donor[]>;
-  
-  // Healthcare Provider management
-  createHealthcareProvider(provider: Omit<HealthcareProvider, 'id'>): Promise<HealthcareProvider>;
-  getHealthcareProvider(id: string): Promise<HealthcareProvider | null>;
-  getHealthcareProviderByUserId(userId: string): Promise<HealthcareProvider | null>;
-  updateHealthcareProvider(id: string, updates: Partial<HealthcareProvider>): Promise<HealthcareProvider | null>;
-  getHealthcareProviders(): Promise<HealthcareProvider[]>;
-  
-  // Transfusion management
-  createTransfusion(transfusion: Omit<PatientTransfusion, 'id'>): Promise<PatientTransfusion>;
-  getTransfusion(id: string): Promise<PatientTransfusion | null>;
-  getTransfusionsByPatientId(patientId: string): Promise<PatientTransfusion[]>;
-  getTransfusionsByDonorId(donorId: string): Promise<PatientTransfusion[]>;
-  updateTransfusion(id: string, updates: Partial<PatientTransfusion>): Promise<PatientTransfusion | null>;
-  deleteTransfusion(id: string): Promise<boolean>;
-  getTransfusions(): Promise<PatientTransfusion[]>;
-  
-  // Notification management
-  createNotification(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<Notification>;
-  getNotification(id: string): Promise<Notification | null>;
-  getNotificationsByUserId(userId: string): Promise<Notification[]>;
-  updateNotification(id: string, updates: Partial<Notification>): Promise<Notification | null>;
-  deleteNotification(id: string): Promise<boolean>;
-  markNotificationRead(id: string): Promise<boolean>;
-  
-  // Emergency Request management
-  createEmergencyRequest(request: Omit<EmergencyRequest, 'id' | 'createdAt'>): Promise<EmergencyRequest>;
-  getEmergencyRequest(id: string): Promise<EmergencyRequest | null>;
-  getEmergencyRequestsByPatientId(patientId: string): Promise<EmergencyRequest[]>;
-  updateEmergencyRequest(id: string, updates: Partial<EmergencyRequest>): Promise<EmergencyRequest | null>;
-  getActiveEmergencyRequests(): Promise<EmergencyRequest[]>;
-  
-  // Donation management
-  createDonation(donation: Omit<DonorDonation, 'id' | 'createdAt'>): Promise<DonorDonation>;
-  getDonation(id: string): Promise<DonorDonation | null>;
-  getDonationsByDonorId(donorId: string): Promise<DonorDonation[]>;
-  getDonationsByPatientId(patientId: string): Promise<DonorDonation[]>;
-  updateDonation(id: string, updates: Partial<DonorDonation>): Promise<DonorDonation | null>;
-  getDonations(): Promise<DonorDonation[]>;
-  
-  // Donor Family management
-  createDonorFamily(family: Omit<DonorFamily, 'id' | 'assignedAt'>): Promise<DonorFamily>;
-  getDonorFamiliesByPatientId(patientId: string): Promise<DonorFamily[]>;
-  getDonorFamiliesByDonorId(donorId: string): Promise<DonorFamily[]>;
-  updateDonorFamily(id: string, updates: Partial<DonorFamily>): Promise<DonorFamily | null>;
-  deactivateDonorFamily(id: string): Promise<boolean>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
+
+  // Transfusion methods
+  getTransfusionsByPatient(patientId: string): Promise<any[]>;
+  createTransfusion(transfusion: any): Promise<any>;
+  updateTransfusion(id: string, updates: any): Promise<any>;
 }
 
 // In-memory storage implementation for development
@@ -230,7 +173,7 @@ export class MemStorage implements IStorage {
   async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
     const user = this.users.get(id);
     if (!user) return null;
-    
+
     const updatedUser = { ...user, ...updates };
     this.users.set(id, updatedUser);
     return updatedUser;
@@ -266,7 +209,7 @@ export class MemStorage implements IStorage {
   async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient | null> {
     const patient = this.patients.get(id);
     if (!patient) return null;
-    
+
     const updatedPatient = { ...patient, ...updates };
     this.patients.set(id, updatedPatient);
     return updatedPatient;
@@ -302,7 +245,7 @@ export class MemStorage implements IStorage {
   async updateDonor(id: string, updates: Partial<Donor>): Promise<Donor | null> {
     const donor = this.donors.get(id);
     if (!donor) return null;
-    
+
     const updatedDonor = { ...donor, ...updates };
     this.donors.set(id, updatedDonor);
     return updatedDonor;
@@ -344,7 +287,7 @@ export class MemStorage implements IStorage {
   async updateHealthcareProvider(id: string, updates: Partial<HealthcareProvider>): Promise<HealthcareProvider | null> {
     const provider = this.healthcareProviders.get(id);
     if (!provider) return null;
-    
+
     const updatedProvider = { ...provider, ...updates };
     this.healthcareProviders.set(id, updatedProvider);
     return updatedProvider;
@@ -379,7 +322,7 @@ export class MemStorage implements IStorage {
   async updateTransfusion(id: string, updates: Partial<PatientTransfusion>): Promise<PatientTransfusion | null> {
     const transfusion = this.transfusions.get(id);
     if (!transfusion) return null;
-    
+
     const updatedTransfusion = { ...transfusion, ...updates };
     this.transfusions.set(id, updatedTransfusion);
     return updatedTransfusion;
@@ -415,7 +358,7 @@ export class MemStorage implements IStorage {
   async updateNotification(id: string, updates: Partial<Notification>): Promise<Notification | null> {
     const notification = this.notifications.get(id);
     if (!notification) return null;
-    
+
     const updatedNotification = { ...notification, ...updates };
     this.notifications.set(id, updatedNotification);
     return updatedNotification;
@@ -428,7 +371,7 @@ export class MemStorage implements IStorage {
   async markNotificationRead(id: string): Promise<boolean> {
     const notification = this.notifications.get(id);
     if (!notification) return false;
-    
+
     notification.isRead = true;
     return true;
   }
@@ -455,7 +398,7 @@ export class MemStorage implements IStorage {
   async updateEmergencyRequest(id: string, updates: Partial<EmergencyRequest>): Promise<EmergencyRequest | null> {
     const request = this.emergencyRequests.get(id);
     if (!request) return null;
-    
+
     const updatedRequest = { ...request, ...updates };
     this.emergencyRequests.set(id, updatedRequest);
     return updatedRequest;
@@ -491,7 +434,7 @@ export class MemStorage implements IStorage {
   async updateDonation(id: string, updates: Partial<DonorDonation>): Promise<DonorDonation | null> {
     const donation = this.donations.get(id);
     if (!donation) return null;
-    
+
     const updatedDonation = { ...donation, ...updates };
     this.donations.set(id, updatedDonation);
     return updatedDonation;
@@ -523,7 +466,7 @@ export class MemStorage implements IStorage {
   async updateDonorFamily(id: string, updates: Partial<DonorFamily>): Promise<DonorFamily | null> {
     const family = this.donorFamilies.get(id);
     if (!family) return null;
-    
+
     const updatedFamily = { ...family, ...updates };
     this.donorFamilies.set(id, updatedFamily);
     return updatedFamily;
@@ -532,7 +475,7 @@ export class MemStorage implements IStorage {
   async deactivateDonorFamily(id: string): Promise<boolean> {
     const family = this.donorFamilies.get(id);
     if (!family) return false;
-    
+
     family.isActive = false;
     return true;
   }

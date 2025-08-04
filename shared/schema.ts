@@ -299,3 +299,5 @@ export type InsertEmergencyRequest = z.infer<
   typeof insertEmergencyRequestSchema
 >;
 export type DonorFamily = typeof donorFamilies.$inferSelect;
+export type Transfusion = typeof patientTransfusions.$inferSelect;
+export type InsertTransfusion = z.infer<typeof insertTransfusionSchema>;
