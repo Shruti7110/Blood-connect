@@ -4,23 +4,23 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthWrapper } from "@/components/auth-wrapper";
-import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import PatientDashboard from "@/pages/patient-dashboard";
 import PatientFamily from "@/pages/patient-family";
-import PatientHealth from "@/pages/patient-health";
 import PatientSchedule from "@/pages/patient-schedule";
+import PatientHealth from "@/pages/patient-health";
 import PatientEducation from "@/pages/patient-education";
+import PatientAssistant from "@/pages/patient-assistant";
+import DonorAssistant from "@/pages/donor-assistant";
+import ProviderAssistant from "@/pages/provider-assistant";
 import ProviderDashboard from "@/pages/provider-dashboard";
 import HospitalDashboard from "@/pages/hospital-dashboard";
 import HospitalPatients from "@/pages/hospital-patients";
 import HospitalDonors from "@/pages/hospital-donors";
 import DonorDashboard from "@/pages/donor-dashboard";
 import DonorDonations from "@/pages/donor-donations";
-import DonorAssistant from './pages/donor-assistant';
-import PatientAssistant from './pages/patient-assistant';
-import ProviderAssistant from './pages/provider-assistant';
+import NotFound from "@/pages/not-found";
 
 function AuthenticatedRouter() {
   return (
@@ -57,6 +57,12 @@ function AuthenticatedRouter() {
             return <NotFound />;
           }} />
           <Route path="/education" component={() => <PatientEducation user={user} />} />
+          <Route path="/ai-assistant" component={() => {
+            if (user.role === 'patient') return <PatientAssistant user={user} />;
+            if (user.role === 'donor') return <DonorAssistant user={user} />;
+            if (user.role === 'healthcare_provider') return <ProviderAssistant user={user} />;
+            return <NotFound />;
+          }} />
           <Route path="/">
             {user.role === 'patient' && <PatientDashboard user={user} />}
             {user.role === 'donor' && <DonorDashboard user={user} />}
@@ -70,6 +76,7 @@ function AuthenticatedRouter() {
               <Route path="/schedule" component={() => <PatientSchedule user={user} />} />
               <Route path="/health" component={() => <PatientHealth user={user} />} />
               <Route path="/education" component={() => <PatientEducation user={user} />} />
+              <Route path="/ai-assistant" component={() => <PatientAssistant user={user} />} />
             </>
           )}
 
@@ -78,6 +85,7 @@ function AuthenticatedRouter() {
               <Route path="/dashboard" component={() => <DonorDashboard user={user} />} />
               <Route path="/donations" component={() => <DonorDonations user={user} />} />
               <Route path="/education" component={() => <PatientEducation user={user} />} />
+              <Route path="/ai-assistant" component={() => <DonorAssistant user={user} />} />
             </>
           )}
 
@@ -86,6 +94,7 @@ function AuthenticatedRouter() {
               <Route path="/hospital-patients" component={() => <HospitalPatients user={user} />} />
               <Route path="/hospital-donors" component={() => <HospitalDonors user={user} />} />
               <Route path="/education" component={() => <PatientEducation user={user} />} />
+              <Route path="/ai-assistant" component={() => <ProviderAssistant user={user} />} />
             </>
           )}
            <Route path="/donor-assistant" component={() => <DonorAssistant user={user} />} />

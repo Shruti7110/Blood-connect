@@ -892,18 +892,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
     // AI Assistant Chat endpoint
-    app.post("/api/ai/chat", AuthMiddleware, async (req: AuthenticatedRequest, res) => {
+    app.post("/api/ai/chat", async (req, res) => {
       try {
-          const user = req.user;
-          if (!user) {
-              return res.status(401).json({ message: "User not authenticated." });
-          }
-          const message = req.body.message;
-          if (!message) {
-              return res.status(400).json({ message: "Message is required." });
-          }
-          const response = await handleAIChat(message, user);
-          res.json({ response });
+          await handleAIChat(req, res);
       } catch (error) {
           console.error("AI Chat error:", error);
           res.status(500).json({ message: "Failed to process AI chat request." });
