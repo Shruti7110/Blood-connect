@@ -21,7 +21,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {
+      console.log("Registration request body:", JSON.stringify(req.body, null, 2));
+      
       const userData = insertUserSchema.parse(req.body);
+      console.log("Parsed user data:", JSON.stringify(userData, null, 2));
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email);
@@ -30,6 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.createUser(userData);
+      console.log("Created user:", user.id, user.role);
 
       // Create role-specific profile
       if (user.role === "patient") {
@@ -41,8 +45,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.status(201).json({ user: { ...user, password: undefined } });
-    } catch (error) {
-      res.status(400).json({ message: "Invalid user data" });
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      if (error.name === 'ZodError') {
+        console.error("Validation errors:", error.errors);
+        res.status(400).json({ 
+          message: "Invalid user data", 
+          details: error.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`)
+        });
+      } else {
+        res.status(500).json({ message: "Registration failed", error: error.message });
+      }
     }
   });
 
@@ -462,6 +475,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Donor assignment error:", error);
       res.status(500).json({ message: "Failed to assign donors" });
+    }
+  });
+
+  // Smart notification system
+  app.post("/api/notifications/send-reminders", async (req, res) => {
+    try {
+      const now = new Date();
+      const threeMonthsAgo = new Date(now.getTime() - (90 * 24 * 60 * 60 * 1000));
+
+      // Get donors who haven't donated in 3+ months
+      const { data: donors, error: donorError } = await supabase
+        .from('donors')
+        .select(`
+          id,
+          user_id,
+          last_donation,
+          users!inner(name)
+        `)
+        .or(`last_donation.is.null,last_donation.lt.${threeMonthsAgo.toISOString()}`);
+
+      if (!donorError && donors) {
+        for (const donor of donors) {
+          await storage.createNotification({
+            userId: donor.user_id,
+            title: "Donation Reminder",
+            message: "It's been over 3 months since your last donation. Consider scheduling a new appointment to help patients in need.",
+            type: "donation_reminder"
+          });
+        }
+      }
+
+      // Get patients needing transfusions based on their frequency
+      const { data: patients, error: patientError } = await supabase
+        .from('patients')
+        .select(`
+          id,
+          user_id,
+          last_transfusion,
+          manual_transfusion_frequency,
+          users!inner(name)
+        `)
+        .not('manual_transfusion_frequency', 'is', null);
+
+      if (!patientError && patients) {
+        for (const patient of patients) {
+          if (patient.manual_transfusion_frequency && patient.last_transfusion) {
+            const frequencyDays = parseInt(patient.manual_transfusion_frequency);
+            const lastTransfusion = new Date(patient.last_transfusion);
+            const daysSinceLastTransfusion = (now.getTime() - lastTransfusion.getTime()) / (1000 * 60 * 60 * 24);
+
+            if (daysSinceLastTransfusion >= frequencyDays - 7) { // Remind 7 days before due
+              await storage.createNotification({
+                userId: patient.user_id,
+                title: "Transfusion Reminder",
+                message: "Your next transfusion is due soon. Please schedule an appointment with your healthcare provider.",
+                type: "transfusion_reminder"
+              });
+            }
+          }
+        }
+      }
+
+      res.json({ message: "Reminders sent successfully" });
+    } catch (error) {
+      console.error("Error sending reminders:", error);
+      res.status(500).json({ message: "Failed to send reminders" });
     }
   });
 

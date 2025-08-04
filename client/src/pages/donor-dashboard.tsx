@@ -47,17 +47,17 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
   // Parse donation history from donor data - handle both string, object and array formats
   const donationHistory = (() => {
     if (!donor?.donation_history) return [];
-    
+
     // If it's already an array, return it
     if (Array.isArray(donor.donation_history)) {
       return donor.donation_history;
     }
-    
+
     // If it's an object (not stringified), return it as array
     if (typeof donor.donation_history === 'object') {
       return Array.isArray(donor.donation_history) ? donor.donation_history : [];
     }
-    
+
     // If it's a string, try to parse it
     if (typeof donor.donation_history === 'string') {
       try {
@@ -68,7 +68,7 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
         return [];
       }
     }
-    
+
     return [];
   })();
 
@@ -77,16 +77,16 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
     const badges = [];
     const totalDonations = donationHistory.length;
     const isAssignedToPatient = myPatients.length > 0;
-    
+
     // Check if donor is regular (donates every 4 months)
     const isRegularDonor = donationHistory.length >= 3 && (() => {
       if (donationHistory.length < 2) return false;
-      
+
       // Sort donations by date
       const sortedDonations = [...donationHistory].sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       );
-      
+
       // Check if recent donations are within 4-month intervals
       for (let i = 0; i < Math.min(3, sortedDonations.length - 1); i++) {
         const current = new Date(sortedDonations[i].date);
@@ -198,7 +198,7 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
             <Calendar className="w-5 h-5 mr-2" />
             Schedule Appointment
           </Button>
-          
+
           {/* Achievement Badges */}
           {badges.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
@@ -323,7 +323,7 @@ export default function DonorDashboard({ user }: DonorDashboardProps) {
               </CardContent>
             </Card>
 
-            
+
           </div>
         </div>
       </div>

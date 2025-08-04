@@ -44,14 +44,14 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
   const todayAppointments = upcomingTransfusions?.filter(t => {
     const appointmentDate = new Date(t.scheduledDate || t.scheduled_date);
     const today = new Date();
-    
+
     // Set both dates to start of day for accurate comparison
     const appointmentDay = new Date(appointmentDate.getFullYear(), appointmentDate.getMonth(), appointmentDate.getDate());
     const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    
+
     const isToday = appointmentDay.getTime() === todayDay.getTime();
     const isAtThisHospital = hospitalName && t.location?.includes(hospitalName);
-    
+
     console.log('Checking appointment:', {
       appointmentDate: appointmentDate.toISOString(),
       appointmentDay: appointmentDay.toISOString(),
@@ -61,7 +61,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
       location: t.location,
       hospitalName
     });
-    
+
     return isToday && isAtThisHospital;
   }) || [];
 
@@ -75,10 +75,10 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     const availableDonors = donors?.filter(d => 
       d.user?.bloodGroup === type && d.availableForDonation
     )?.length || 0;
-    
+
     // Calculate units (assuming 2 units per available donor)
     const availableUnits = availableDonors * 2;
-    
+
     return {
       type,
       units: availableUnits,

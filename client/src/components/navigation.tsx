@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { authService, type AuthUser } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface NavigationProps {
   user: AuthUser;
@@ -83,17 +84,48 @@ export function Navigation({ user }: NavigationProps) {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 w-5 h-5 text-xs flex items-center justify-center p-0"
-                >
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="relative">
+                  <Bell className="w-4 h-4" />
+                  {notifications.filter(n => !n.isRead).length > 0 && (
+                    <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs">
+                      {notifications.filter(n => !n.isRead).length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">Notifications</h4>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-gray-500">No notifications</p>
+                    ) : (
+                      notifications.slice(0, 5).map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-3 rounded-lg border text-sm ${
+                            notification.isRead ? 'bg-gray-50' : 'bg-blue-50 border-blue-200'
+                          }`}
+                        >
+                          <div className="font-medium">{notification.title}</div>
+                          <div className="text-gray-600 mt-1">{notification.message}</div>
+                          <div className="text-xs text-gray-400 mt-2">
+                            {new Date(notification.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {notifications.length > 5 && (
+                    <p className="text-xs text-gray-500 text-center">
+                      {notifications.length - 5} more notifications...
+                    </p>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
