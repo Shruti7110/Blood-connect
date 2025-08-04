@@ -270,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/transfusions/donor/:donorId", async (req, res) => {
     try {
-      const transfusions = await storage.getTransfusionsByDonor(req.params.donorId);
+      const transfusions = await storage.getTransfusionsByDonorId(req.params.donorId);
       // Ensure consistent date field naming
       const normalizedTransfusions = transfusions.map((t: any) => ({
         ...t,
@@ -781,7 +781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/donor-family/:patientId", async (req, res) => {
     try {
       const { patientId } = req.params;
-      const donorFamily = await storage.getDonorFamilyByPatientId(patientId);
+      const donorFamily = await storage.getDonorFamiliesByPatientId(patientId);
 
       if (!donorFamily || donorFamily.length === 0) {
         return res.json({ family: [], availableUnits: 0 });

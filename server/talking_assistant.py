@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 from typing import Dict, Any, Optional
 from contextlib import AsyncExitStack
+import openai
 
 try:
     from agents import Agent, Runner

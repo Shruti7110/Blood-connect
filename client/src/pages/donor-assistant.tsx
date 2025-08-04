@@ -18,14 +18,10 @@ export default function DonorAssistant({ user }: DonorAssistantProps) {
             <div className="p-3 bg-red-100 rounded-full">
               <span className="text-2xl">🩸</span>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
               Donor AI Assistant
-            </h1>
-          </div>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Get personalized help with scheduling donations, checking your donation history, 
-            connecting with your patient family, and learning about blood donation best practices.
-          </p>
+            </h2>
+          </div>          
         </div>
         
         <AIAssistant user={user} />
