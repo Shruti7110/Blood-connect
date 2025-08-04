@@ -359,112 +359,65 @@ export class SupabaseStorage implements IStorage {
     return data;
   }
 
-  // Transfusion methods
-  async getTransfusion(id: string): Promise<Transfusion | undefined> {
+  // Donor Donation methods
+  async getDonationsByDonorId(donorId: string): Promise<any[]> {
     const { data, error } = await supabase
-      .from('transfusions')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error || !data) return undefined;
-    return data;
-  }
-
-  async createTransfusion(transfusion: InsertTransfusion): Promise<Transfusion> {
-    // Map camelCase to snake_case for database
-    const dbTransfusion = {
-      patient_id: transfusion.patientId,
-      donor_id: transfusion.donorId || null,
-      provider_id: transfusion.providerId || null,
-      scheduled_date: transfusion.scheduledDate,
-      status: transfusion.status || 'scheduled',
-      location: transfusion.location || null,
-      units_required: transfusion.unitsRequired || null,
-      notes: transfusion.notes || null
-    };
-
-    const { data, error } = await supabase
-      .from('transfusions')
-      .insert(dbTransfusion)
-      .select()
-      .single();
-
-    if (error || !data) {
-      console.error('Transfusion creation error:', error);
-      throw new Error('Failed to create transfusion');
-    }
-
-    // Map back to camelCase
-    return {
-      ...data,
-      patientId: data.patient_id,
-      donorId: data.donor_id,
-      providerId: data.provider_id,
-      scheduledDate: data.scheduled_date,
-      completedDate: data.completed_date,
-      unitsRequired: data.units_required
-    };
-  }
-
-  async updateTransfusion(id: string, transfusion: Partial<Transfusion>): Promise<Transfusion | undefined> {
-    const { data, error } = await supabase
-      .from('transfusions')
-      .update(transfusion)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error || !data) return undefined;
-    return data;
-  }
-
-  async getTransfusionsByPatient(patientId: string): Promise<Transfusion[]> {
-    const { data, error } = await supabase
-      .from('transfusions')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('scheduled_date', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching transfusions:', error);
-      return [];
-    }
-
-    // Map database column names
-    const mappedData = (data || []).map(transfusion => ({
-      ...transfusion,
-      patientId: transfusion.patient_id,
-      donorId: transfusion.donor_id,
-      providerId: transfusion.provider_id,
-      scheduledDate: transfusion.scheduled_date,
-      completedDate: transfusion.completed_date,
-      unitsRequired: transfusion.units_required
-    }));
-
-    return mappedData;
-  }
-
-  async getTransfusionsByDonor(donorId: string): Promise<Transfusion[]> {
-    const { data, error } = await supabase
-      .from('transfusions')
+      .from('donors_donations')
       .select('*')
       .eq('donor_id', donorId)
       .order('scheduled_date', { ascending: false });
 
-    if (error) return [];
+    if (error) {
+      console.error('Error fetching donor donations:', error);
+      return [];
+    }
+
     return data || [];
   }
 
-  async getUpcomingTransfusions(): Promise<Transfusion[]> {
+  async updateDonation(id: string, updates: any): Promise<any> {
     const { data, error } = await supabase
-      .from('transfusions')
-      .select('*')
-      .eq('status', 'scheduled')
-      .gte('scheduled_date', new Date().toISOString())
-      .order('scheduled_date', { ascending: true });
+      .from('donors_donations')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (error) return [];
+    if (error) {
+      console.error('Error updating donation:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async createDonation(donation: any): Promise<any> {
+    const { data, error } = await supabase
+      .from('donors_donations')
+      .insert(donation)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating donation:', error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  async getTransfusionsByDonorId(donorId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('patient_transfusions')
+      .select('*')
+      .eq('donor_id', donorId)
+      .order('scheduled_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching donor transfusions:', error);
+      return [];
+    }
+
     return data || [];
   }
 
@@ -520,7 +473,7 @@ export class SupabaseStorage implements IStorage {
     // Get donation counts for each donor from transfusions table
     const donorIds = familyData.map(f => f.donor_id);
     const { data: donationCounts } = await supabase
-      .from('transfusions')
+      .from('patient_transfusions')
       .select('donor_id, status, scheduled_date')
       .in('donor_id', donorIds);
 
@@ -720,41 +673,6 @@ export class SupabaseStorage implements IStorage {
     return data;
   }
 
-  async getDonations(): Promise<Donation[]> {
-    const { data, error } = await this.supabase
-      .from('donations')
-      .select('*');
-
-    if (error) throw error;
-    return data || [];
-  }
-
-  async getDonationsByDonorId(donorId: string): Promise<Donation[]> {
-    const { data, error } = await this.supabase
-      .from('donations')
-      .select('*')
-      .eq('donor_id', donorId)
-      .order('scheduled_date', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  }
-
-  async getDonorFamilyByPatientId(patientId: string): Promise<DonorFamily[]> {
-    const { data, error } = await supabase
-      .from('donor_families')
-      .select('*')
-      .eq('patient_id', patientId)
-      .eq('is_active', true);
-
-    if (error) {
-      console.error('Error fetching donor family:', error);
-      return [];
-    }
-
-    return data || [];
-  }
-
   async getAllDonorFamilies(): Promise<DonorFamily[]> {
     const { data, error } = await supabase
       .from('donor_families')
@@ -767,21 +685,5 @@ export class SupabaseStorage implements IStorage {
     }
 
     return data || [];
-  }
-
-  async updateDonation(id: string, updates: any): Promise<any> {
-    const { data, error } = await supabase
-      .from('donations')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating donation:', error);
-      throw error;
-    }
-
-    return data;
   }
 }

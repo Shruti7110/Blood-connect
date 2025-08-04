@@ -74,10 +74,10 @@ export const donors = pgTable("donors", {
   donationHistory: jsonb("donation_history").default(sql`'[]'`),
 });
 
-export const donations = pgTable("donations", {
+export const donorsDonations = pgTable("donors_donations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   donorId: varchar("donor_id").references(() => donors.id).notNull(),
-  patientId: varchar("patient_id").references(() => patients.id), // Optional - allocated to patient or hospital
+  patientId: varchar("patient_id").references(() => patients.id), // Optional - can be null
   scheduledDate: timestamp("scheduled_date").notNull(),
   completedDate: timestamp("completed_date"),
   location: text("location").notNull(),
@@ -103,7 +103,7 @@ export const donorFamilies = pgTable("donor_families", {
   isActive: boolean("is_active").default(true),
 });
 
-export const transfusions = pgTable("transfusions", {
+export const patientTransfusions = pgTable("patient_transfusions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   patientId: varchar("patient_id").references(() => patients.id).notNull(),
   donorId: varchar("donor_id").references(() => donors.id),
@@ -173,10 +173,19 @@ export const insertEmergencyRequestSchema = createInsertSchema(emergencyRequests
   createdAt: true,
 });
 
-export const insertDonationSchema = createInsertSchema(donations).omit({
+export const insertDonorDonationSchema = createInsertSchema(donorsDonations).omit({
   id: true,
   completedDate: true,
   createdAt: true,
+}).extend({
+  scheduledDate: z.string().or(z.date()).transform((val) => 
+    typeof val === 'string' ? new Date(val) : val
+  ),
+});
+
+export const insertPatientTransfusionSchema = createInsertSchema(patientTransfusions).omit({
+  id: true,
+  completedDate: true,
 }).extend({
   scheduledDate: z.string().or(z.date()).transform((val) => 
     typeof val === 'string' ? new Date(val) : val
@@ -192,12 +201,12 @@ export type Donor = typeof donors.$inferSelect;
 export type InsertDonor = z.infer<typeof insertDonorSchema>;
 export type HealthcareProvider = typeof healthcareProviders.$inferSelect;
 export type InsertHealthcareProvider = z.infer<typeof insertHealthcareProviderSchema>;
-export type Transfusion = typeof transfusions.$inferSelect;
-export type InsertTransfusion = z.infer<typeof insertTransfusionSchema>;
+export type PatientTransfusion = typeof patientTransfusions.$inferSelect;
+export type InsertPatientTransfusion = z.infer<typeof insertPatientTransfusionSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
-export type Donation = typeof donations.$inferSelect;
-export type InsertDonation = z.infer<typeof insertDonationSchema>;
+export type DonorDonation = typeof donorsDonations.$inferSelect;
+export type InsertDonorDonation = z.infer<typeof insertDonorDonationSchema>;
 export type EmergencyRequest = typeof emergencyRequests.$inferSelect;
 export type InsertEmergencyRequest = z.infer<typeof insertEmergencyRequestSchema>;
 export type DonorFamily = typeof donorFamilies.$inferSelect;

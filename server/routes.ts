@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { supabase } from "./supabase";
-import { insertUserSchema, insertPatientSchema, insertDonorSchema, insertHealthcareProviderSchema, insertTransfusionSchema, insertNotificationSchema, insertEmergencyRequestSchema, insertDonationSchema } from "@shared/schema";
+import { insertUserSchema, insertPatientSchema, insertDonorSchema, insertHealthcareProviderSchema, insertPatientTransfusionSchema, insertNotificationSchema, insertEmergencyRequestSchema, insertDonorDonationSchema } from "@shared/schema";
 import { SupabaseStorage } from './supabase-storage';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -243,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Transfusion routes
+  // Patient Transfusion routes
   app.get("/api/transfusions/patient/:patientId", async (req, res) => {
     try {
       const transfusions = await storage.getTransfusionsByPatient(req.params.patientId);
@@ -269,8 +269,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/transfusions/upcoming", async (req, res) => {
     try {
-      const transfusions = await storage.getUpcomingTransfusions();
-      res.json(transfusions);
+      const { data: transfusions, error } = await supabase
+        .from('patient_transfusions')
+        .select('*')
+        .eq('status', 'scheduled')
+        .gte('scheduled_date', new Date().toISOString())
+        .order('scheduled_date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching upcoming transfusions:', error);
+        return res.status(500).json({ message: "Failed to fetch upcoming transfusions" });
+      }
+
+      res.json(transfusions || []);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch upcoming transfusions" });
     }
@@ -279,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/transfusions", async (req, res) => {
     try {
       console.log("Received transfusion data:", req.body);
-      const transfusionData = insertTransfusionSchema.parse(req.body);
+      const transfusionData = insertPatientTransfusionSchema.parse(req.body);
       const transfusion = await storage.createTransfusion(transfusionData);
       res.status(201).json(transfusion);
     } catch (error: any) {
@@ -479,12 +490,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Donations routes
+  // Donor Donations routes
   app.get("/api/donations/upcoming", async (req, res) => {
     try {
       // Get upcoming donations from Supabase
       const { data: donations, error } = await supabase
-        .from('donations')
+        .from('donors_donations')
         .select(`
           *,
           donors!inner(
@@ -508,70 +519,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create donations table if it doesn't exist
-  const createDonationsTable = async () => {
-    try {
-      const { error: createError } = await supabase.rpc('exec_sql', {
-        sql: `
-          CREATE TABLE IF NOT EXISTS donations (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            donor_id UUID REFERENCES donors(id) NOT NULL,
-            patient_id UUID REFERENCES patients(id),
-            scheduled_date TIMESTAMP WITH TIME ZONE NOT NULL,
-            completed_date TIMESTAMP WITH TIME ZONE,
-            location TEXT NOT NULL,
-            units_available INTEGER DEFAULT 2,
-            status appointment_status DEFAULT 'scheduled',
-            notes TEXT,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-          );
-
-          CREATE INDEX IF NOT EXISTS idx_donations_donor_id ON donations(donor_id);
-          CREATE INDEX IF NOT EXISTS idx_donations_patient_id ON donations(patient_id);
-          CREATE INDEX IF NOT EXISTS idx_donations_scheduled_date ON donations(scheduled_date);
-        `
-      });
-
-      if (createError) {
-        console.error("Error creating donations table:", createError);
-        // Try alternative approach
-        const { error: altError } = await supabase
-          .from('donations')
-          .select('id')
-          .limit(1);
-
-        if (altError && altError.code === '42P01') {
-          console.log("Donations table doesn't exist, creating it manually...");
-          // We'll handle this in the route
-        }
-      }
-    } catch (error) {
-      console.error("Error in createDonationsTable:", error);
-    }
-  };
-
-  // Donations routes
+  // Donor Donations routes
   app.post("/api/donations", async (req, res) => {
     try {
       console.log("Received donation data:", JSON.stringify(req.body, null, 2));
 
-      // First check if donations table exists
-      const { data: testData, error: testError } = await supabase
-        .from('donations')
-        .select('id')
-        .limit(1);
+      const donationData = insertDonorDonationSchema.parse(req.body);
 
-      if (testError && testError.code === '42P01') {
-        console.log("Donations table doesn't exist. Please create it in your Supabase database.");
-        return res.status(500).json({ 
-          message: "Donations table doesn't exist. Please run the database schema to create it.",
-          code: testError.code
-        });
-      }
-
-      const donationData = insertDonationSchema.parse(req.body);
-
-      // Get the first patient assigned to this donor from donor_families table
+      // Get the first patient assigned to this donor from donor_families table (optional)
       const { data: donorFamilies, error: familyError } = await supabase
         .from('donor_families')
         .select('patient_id')
@@ -581,16 +536,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (familyError) {
         console.error("Error fetching donor families:", familyError);
-        return res.status(500).json({ message: "Failed to fetch donor assignments" });
+        // Don't fail here since patient_id is optional
       }
 
       const patientId = donorFamilies && donorFamilies.length > 0 ? donorFamilies[0].patient_id : null;
 
-      // Log the incoming data for debugging
-      console.log("Processing donation data...");
-
       // Try to insert with minimal required fields first
-      console.log("Attempting donation insert with minimal data...");
       const insertData = {
         donor_id: donationData.donorId,
         scheduled_date: donationData.scheduledDate,
@@ -613,16 +564,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Final insert data:", insertData);
 
       const { data: donation, error } = await supabase
-        .from('donations')
+        .from('donors_donations')
         .insert(insertData)
         .select()
         .single();
 
       if (error) {
         console.error("Supabase error object:", error);
-        console.error("Error properties:", Object.keys(error));
-        console.error("Error string:", String(error));
-        console.error("Error JSON:", JSON.stringify(error, null, 2));
         return res.status(500).json({ 
           message: "Failed to create donation", 
           error: String(error),
@@ -646,7 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { donorId } = req.params;
 
       const { data: donations, error } = await supabase
-        .from('donations')
+        .from('donors_donations')
         .select('*')
         .eq('donor_id', donorId)
         .order('scheduled_date', { ascending: false });

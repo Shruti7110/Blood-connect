@@ -38,7 +38,7 @@ export default function ProviderDashboard({ user }: ProviderDashboardProps) {
 
   const { data: upcomingTransfusions = [] } = useQuery<any[]>({
     queryKey: ['/api/transfusions/upcoming'],
-    enabled: !!provider?.id,
+    enabled: true, // Don't require provider.id since this is a general endpoint
   });
 
   const { data: availableDonors = [] } = useQuery<any[]>({
