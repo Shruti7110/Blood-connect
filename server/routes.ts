@@ -892,13 +892,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
     // AI Assistant Chat endpoint
-    app.post("/api/ai/chat", async (req, res) => {
-      try {
-          await handleAIChat(req, res);
-      } catch (error) {
-          console.error("AI Chat error:", error);
-          res.status(500).json({ message: "Failed to process AI chat request." });
-      }
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      await handleAIChat(req, res);
+    } catch (error) {
+      console.error("AI Chat error:", error);
+      res.status(500).json({ message: "Failed to process AI chat request." });
+    }
   });
 
   const httpServer = createServer(app);
