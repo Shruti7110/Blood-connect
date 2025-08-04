@@ -154,7 +154,7 @@ export const insertHealthcareProviderSchema = createInsertSchema(healthcareProvi
   id: true,
 });
 
-export const insertTransfusionSchema = createInsertSchema(transfusions).omit({
+export const insertTransfusionSchema = createInsertSchema(patientTransfusions).omit({
   id: true,
   completedDate: true,
 }).extend({
