@@ -817,6 +817,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get today's appointments for hospital dashboard
+  app.get("/api/appointments/today/:providerId", async (req, res) => {
+    try {
+      const { providerId } = req.params;
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+      // Get provider's location
+      const provider = await storage.getHealthcareProvider(providerId);
+      if (!provider) {
+        return res.status(404).json({ message: "Provider not found" });
+      }
+
+      const providerUser = await storage.getUser(provider.userId);
+      const providerLocation = providerUser?.location;
+
+      // Get patient transfusions for today at this location
+      const { data: patientTransfusions, error: transfusionError } = await supabase
+        .from('patient_transfusions')
+        .select(`
+          *,
+          patients!inner(
+            *,
+            users!inner(*)
+          )
+        `)
+        .gte('scheduled_date', startOfDay.toISOString())
+        .lt('scheduled_date', endOfDay.toISOString())
+        .eq('location', providerLocation)
+        .eq('status', 'scheduled');
+
+      // Get donor donations for today at this location
+      const { data: donorDonations, error: donationError } = await supabase
+        .from('donors_donations')
+        .select(`
+          *,
+          donors!inner(
+            *,
+            users!inner(*)
+          )
+        `)
+        .gte('scheduled_date', startOfDay.toISOString())
+        .lt('scheduled_date', endOfDay.toISOString())
+        .eq('location', providerLocation)
+        .eq('status', 'scheduled');
+
+      if (transfusionError || donationError) {
+        console.error('Error fetching appointments:', { transfusionError, donationError });
+        return res.status(500).json({ message: "Failed to fetch appointments" });
+      }
+
+      res.json({
+        patientAppointments: patientTransfusions || [],
+        donorAppointments: donorDonations || []
+      });
+    } catch (error) {
+      console.error("Error fetching today's appointments:", error);
+      res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
   // Get all donor families (for healthcare providers)
   app.get("/api/donor-families/all", async (req, res) => {
     try {

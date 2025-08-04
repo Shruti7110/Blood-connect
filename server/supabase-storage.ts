@@ -33,7 +33,10 @@ export class SupabaseStorage implements IStorage {
       .select()
       .single();
 
-    if (error || !data) throw new Error('Failed to create user');
+    if (error || !data) {
+      console.error('Supabase createUser error:', error);
+      throw new Error(`Failed to create user: ${error?.message || 'Unknown error'}`);
+    }
     return data;
   }
 
@@ -47,6 +50,10 @@ export class SupabaseStorage implements IStorage {
 
     if (error || !data) return undefined;
     return data;
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.getUser(id);
   }
 
   // Patient methods
