@@ -6,14 +6,25 @@ import json
 from datetime import datetime
 from typing import Dict, Any, Optional
 from contextlib import AsyncExitStack
-import openai
-
-try:
-    from agents import Agent, Runner
-    from agents.mcp import MCPServerStdio
-except ImportError:
-    print("Error: agents library not found. Please install it with: pip install agents")
-    sys.exit(1)
+from agents import Agent, Runner
+from agents.mcp import MCPServerStdio
+import time
+# import openai
+# import gymnasium as gym 
+# from langchain.agents import AgentExecutor  # Modern agent framework
+# from supabase import create_client
+# import uvloop
+# asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+# try:
+    
+# except ImportError:
+#     print("Error: agents library not found. Please install it with: pip install agents")
+#     sys.exit(1)
+    
+# Replace MCPServerStdio with:
+# supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+from dotenv import load_dotenv
+load_dotenv()
 
 class BloodDonationAssistant:
     def __init__(self, user_data: Dict[str, Any]):
@@ -155,7 +166,9 @@ class BloodDonationAssistant:
         try:
             # Get environment variables
             supabase_access_token = os.getenv("SUPABASE_ACCESS_TOKEN")
+            print(supabase_access_token)
             supabase_project_ref = os.getenv("SUPABASE_PROJECT_REF")
+            print(supabase_project_ref)
             openai_api_key = os.getenv("OPENAI_API_KEY")
             
             if not all([supabase_access_token, supabase_project_ref, openai_api_key]):
@@ -175,7 +188,7 @@ class BloodDonationAssistant:
                         "--features=database"
                     ]
                 },
-                client_session_timeout_seconds=30
+                client_session_timeout_seconds=120
             )
             
             await mcp_server.connect()
@@ -195,22 +208,28 @@ class BloodDonationAssistant:
 
     async def process_message(self, message: str) -> str:
         """Process a user message and return response"""
+        start_time = time.time()
         try:
             agent, mcp_server = await self.create_agent_and_mcp()
-            
             async with mcp_server:
-                # Include user context in the message
                 context_message = f"My user ID is {self.user_id}. My role is {self.user_role}. {message}"
+                print(f"Context message: {context_message}")  # Log the context message
                 
-                result = await Runner.run(
-                    agent,
-                    context_message,
-                    max_turns=10
-                )
+                try:
+                    result = await asyncio.wait_for(
+                        Runner.run(agent, context_message, max_turns=10),
+                        timeout=120
+                    )
+                except asyncio.TimeoutError:
+                    print("Request took too long.")  # Log timeout
+                    return "Request took too long. Please try again later."
                 
+                end_time = time.time()
+                print(f"Processing time: {end_time - start_time} seconds")
                 return result.final_output
                 
         except Exception as e:
+            print(f"Error processing message: {str(e)}")  # Log any errors
             return f"I'm sorry, I encountered an error while processing your request: {str(e)}"
 
 async def main():

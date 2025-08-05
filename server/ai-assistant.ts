@@ -82,30 +82,37 @@ export async function handleAIChat(req: Request, res: Response) {
       errorOutput += data.toString();
     });
 
+    let responseSent = false; // Flag to track if response has been sent
+
     pythonProcess.on('close', (code) => {
+      if (responseSent) return; // Prevent further responses
+
       if (code !== 0) {
         console.error('Python process error:', errorOutput);
+        responseSent = true;
         return res.status(500).json({ 
-          error: 'AI assistant encountered an error',
+          error: 'AI Assist error',
           details: errorOutput 
         });
       }
 
+      // Handle successful response
       try {
-        // Parse the output as JSON
         const lines = output.trim().split('\n');
         const lastLine = lines[lines.length - 1];
         const result = JSON.parse(lastLine);
 
         if (result.error) {
+          responseSent = true;
           return res.status(500).json({ error: result.error });
         }
 
-        res.json({ response: result.response });
+        responseSent = true;
+        return res.json({ response: result.response });
       } catch (parseError) {
         console.error('Failed to parse AI response:', parseError);
-        console.log('Raw output:', output);
-        res.status(500).json({ 
+        responseSent = true;
+        return res.status(500).json({ 
           error: 'Failed to parse AI response',
           rawOutput: output 
         });
@@ -114,11 +121,12 @@ export async function handleAIChat(req: Request, res: Response) {
 
     // Set a timeout for the process
     setTimeout(() => {
-      if (!pythonProcess.killed) {
+      if (!pythonProcess.killed && !responseSent) {
         pythonProcess.kill();
-        res.status(408).json({ error: 'Request timeout' });
+        responseSent = true;
+        return res.status(408).json({ error: 'Request timeout' });
       }
-    }, 30000); // 30 second timeout
+    }, 120000); // 120 second timeout
 
   } catch (error) {
     console.error('AI Assistant error:', error);
