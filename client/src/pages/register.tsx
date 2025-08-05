@@ -3,8 +3,21 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/auth";
@@ -21,7 +34,7 @@ export default function Register() {
     phone: "",
     location: "",
     role: "",
-    bloodGroup: "",
+    blood_group: "",
   });
   const [loading, setLoading] = useState(false);
   const [, setLocation] = useLocation();
@@ -35,16 +48,16 @@ export default function Register() {
       const response = await authService.register({
         email: formData.email,
         password: formData.password,
-        role: formData.role as 'patient' | 'donor' | 'healthcare_provider',
+        role: formData.role as "patient" | "donor" | "healthcare_provider",
         name: formData.name,
         phone: formData.phone || undefined,
         location: formData.location || undefined,
-        bloodGroup: formData.bloodGroup || undefined,
+        blood_group: formData.blood_group || undefined,
       });
 
       setUserId(response.user.id);
 
-      if (formData.role === 'patient') {
+      if (formData.role === "patient") {
         setStep(2);
         toast({
           title: "Basic Registration Complete",
@@ -61,7 +74,8 @@ export default function Register() {
       toast({
         variant: "destructive",
         title: "Registration Failed",
-        description: error instanceof Error ? error.message : "Registration failed",
+        description:
+          error instanceof Error ? error.message : "Registration failed",
       });
     } finally {
       setLoading(false);
@@ -74,14 +88,22 @@ export default function Register() {
     setLoading(true);
     try {
       // Get patient profile ID
-      const patientProfile = await apiRequest('GET', `/api/patients/user/${userId}`);
+      const patientProfile = await apiRequest(
+        "GET",
+        `/api/patients/user/${userId}`,
+      );
 
       // Update patient with detailed information
-      await apiRequest('PUT', `/api/patients/${patientProfile.id}`, patientData);
+      await apiRequest(
+        "PUT",
+        `/api/patients/${patientProfile.id}`,
+        patientData,
+      );
 
       toast({
         title: "Registration Complete",
-        description: "Welcome to BloodConnect! Your medical profile has been saved.",
+        description:
+          "Welcome to BloodConnect! Your medical profile has been saved.",
       });
       setLocation("/dashboard");
     } catch (error) {
@@ -96,16 +118,13 @@ export default function Register() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  if (step === 2 && formData.role === 'patient') {
+  if (step === 2 && formData.role === "patient") {
     return (
       <div className="min-h-screen bg-background-alt flex items-center justify-center p-4">
-        <PatientDetailsForm 
-          onSubmit={handlePatientDetails}
-          loading={loading}
-        />
+        <PatientDetailsForm onSubmit={handlePatientDetails} loading={loading} />
       </div>
     );
   }
@@ -119,21 +138,28 @@ export default function Register() {
               <Heart className="w-6 h-6 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-primary">BloodConnect</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">
+            BloodConnect
+          </CardTitle>
           <CardDescription>Create your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleBasicRegistration} className="space-y-4">
             <div>
               <Label htmlFor="role">I am a</Label>
-              <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
+              <Select
+                value={formData.role}
+                onValueChange={(value) => handleInputChange("role", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="patient">Patient</SelectItem>
                   <SelectItem value="donor">Donor</SelectItem>
-                  <SelectItem value="healthcare_provider">Healthcare Provider</SelectItem>
+                  <SelectItem value="healthcare_provider">
+                    Healthcare Provider
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -194,8 +220,13 @@ export default function Register() {
             </div>
 
             <div>
-              <Label htmlFor="bloodGroup">Blood Group</Label>
-              <Select value={formData.bloodGroup} onValueChange={(value) => handleInputChange("bloodGroup", value)}>
+              <Label htmlFor="blood_group">Blood Group</Label>
+              <Select
+                value={formData.blood_group}
+                onValueChange={(value) =>
+                  handleInputChange("blood_group", value)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select blood group" />
                 </SelectTrigger>
@@ -220,7 +251,10 @@ export default function Register() {
         <CardFooter>
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <span className="underline underline-offset-4 hover:text-primary cursor-pointer" onClick={() => window.location.href = '/login'}>
+            <span
+              className="underline underline-offset-4 hover:text-primary cursor-pointer"
+              onClick={() => (window.location.href = "/login")}
+            >
               Sign in
             </span>
           </p>

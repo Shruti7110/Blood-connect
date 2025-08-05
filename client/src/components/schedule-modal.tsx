@@ -135,7 +135,6 @@ export function ScheduleModal({ isOpen, onClose, patientId }: ScheduleModalProps
                 <SelectContent>
                   <SelectItem value="Manipal Hospital, Whitefield">Manipal Hospital, Whitefield</SelectItem>
                   <SelectItem value="Apollo Hospital, Bannerghatta Road">Apollo Hospital, Bannerghatta Road</SelectItem>
-                  <SelectItem value="Fortis Hospital, Cunningham Road">Fortis Hospital, Cunningham Road</SelectItem>
                   <SelectItem value="Narayana Health, Electronic City">Narayana Health, Electronic City</SelectItem>
                 </SelectContent>
               </Select>

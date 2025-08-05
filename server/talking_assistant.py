@@ -3,26 +3,13 @@ import os
 import sys
 import asyncio
 import json
+from dotenv import load_dotenv
 from datetime import datetime
 from typing import Dict, Any, Optional
 from contextlib import AsyncExitStack
 from agents import Agent, Runner
 from agents.mcp import MCPServerStdio
 import time
-# import openai
-# import gymnasium as gym 
-# from langchain.agents import AgentExecutor  # Modern agent framework
-# from supabase import create_client
-# import uvloop
-# asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-# try:
-    
-# except ImportError:
-#     print("Error: agents library not found. Please install it with: pip install agents")
-#     sys.exit(1)
-    
-# Replace MCPServerStdio with:
-# supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 from dotenv import load_dotenv
 load_dotenv()
 

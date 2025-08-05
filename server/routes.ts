@@ -170,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: patient.users.email,
           phone: patient.users.phone,
           location: patient.users.location,
-          bloodGroup: patient.users.blood_group
+          blood_group: patient.users.blood_group
         }
       })) || [];
 
@@ -194,9 +194,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/donors/available/:bloodGroup", async (req, res) => {
+  app.get("/api/donors/available/:blood_group", async (req, res) => {
     try {
-      const donors = await storage.getAvailableDonors(req.params.bloodGroup);
+      const donors = await storage.getAvailableDonors(req.params.blood_group);
       res.json(donors);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch available donors" });
@@ -234,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: donor.users.email,
           phone: donor.users.phone,
           location: donor.users.location,
-          bloodGroup: donor.users.blood_group
+          blood_group: donor.users.blood_group
         }
       })) || [];
 
@@ -367,7 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: assignment.patients.id,
         user_id: assignment.patients.user_id,
         name: assignment.patients.users.name,
-        bloodGroup: assignment.patients.users.blood_group,
+        blood_group: assignment.patients.users.blood_group,
         location: assignment.patients.users.location,
         assignedAt: assignment.assigned_at
       }));
@@ -408,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: item.donors?.users?.name,
           phone: item.donors?.users?.phone,
           location: item.donors?.users?.location,
-          bloodGroup: item.donors?.users?.blood_group
+          blood_group: item.donors?.users?.blood_group
         }
       }));
 
@@ -930,8 +930,8 @@ function daysSinceLastDonation(donationDateStr: string | null): number {
   return Math.floor(diffTime / (1000 * 3600 * 24));
 }
 
-function getCompatibleDonors(patientBloodGroup: string, patientLocation: string, allDonors: any[]): any[] {
-  const compatibleGroups = BLOOD_GROUP_COMPATIBILITY[patientBloodGroup as keyof typeof BLOOD_GROUP_COMPATIBILITY] || [];
+function getCompatibleDonors(patientblood_group: string, patientLocation: string, allDonors: any[]): any[] {
+  const compatibleGroups = BLOOD_GROUP_COMPATIBILITY[patientblood_group as keyof typeof BLOOD_GROUP_COMPATIBILITY] || [];
 
   // Filter donors by compatible blood groups AND matching location
   const compatibleDonors = allDonors.filter(donor => 
