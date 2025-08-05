@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -177,11 +176,11 @@ export function AIAssistant({
             <span className="text-2xl">{getRoleIcon()}</span>
             <span>{getRoleTitle()}</span>
             <Badge variant="secondary" className="ml-2">
-              {userRole.replace("_", " ").toUpperCase()}
+              {userRole ? userRole.replace("_", " ").toUpperCase() : "USER"}
             </Badge>
           </CardTitle>
         </CardHeader>
-        
+
         <CardContent className="flex-1 flex flex-col p-0">
           <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
             {messages.map((message) => (
@@ -224,7 +223,7 @@ export function AIAssistant({
                 </div>
               </div>
             ))}
-            
+
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-white border rounded-lg p-4 shadow-sm mr-12">

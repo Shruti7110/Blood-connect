@@ -19,11 +19,11 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
     hemoglobinLevel: "",
     ironLevels: "",
     weight: "",
-    symptoms: "",
+    symptomsBetweenTransfusions: "",
     chelationMedication: "",
     chelationFrequency: "",
     lastSerumFerritin: "",
-    adverseReactions: "",
+    adverseReactionsHistory: "",
     diagnosis: "",
     thalassemiaType: "",
     ironChelationTherapy: "",
@@ -32,7 +32,16 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
     unitsPerSession: "",
     lastLiverIronMeasurement: "",
     recentIntervalChanges: "",
+    // Added fields based on the new payload structure
+    lastTransfusion: "",
+    nextTransfusionDate: "",
+    transfusionFrequency: "",
+    poorGrowthHistory: false,
+    boneDeformities: false,
+    recurrentInfections: false,
+    organIssuesHistory: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -55,11 +64,11 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
         hemoglobinLevel: patient.hemoglobinLevel || "",
         ironLevels: patient.ironLevels || "",
         weight: patient.weight || "",
-        symptoms: patient.symptomsBetweenTransfusions || "",
+        symptomsBetweenTransfusions: patient.symptomsBetweenTransfusions || "",
         chelationMedication: patient.chelationMedication || "",
         chelationFrequency: patient.chelationFrequency || "",
         lastSerumFerritin: patient.lastSerumFerritin || "",
-        adverseReactions: patient.adverseReactionsHistory || "",
+        adverseReactionsHistory: patient.adverseReactionsHistory || "",
         diagnosis: patient.diagnosis || "",
         thalassemiaType: patient.thalassemiaType || "",
         ironChelationTherapy: patient.ironChelationTherapy || "",
@@ -68,6 +77,13 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
         unitsPerSession: patient.unitsPerSession?.toString() || "",
         lastLiverIronMeasurement: patient.lastLiverIronMeasurement || "",
         recentIntervalChanges: patient.recentIntervalChanges || "",
+        lastTransfusion: patient.last_transfusion ? new Date(patient.last_transfusion).toISOString().split('T')[0] : "",
+        nextTransfusionDate: patient.next_transfusion_date ? new Date(patient.next_transfusion_date).toISOString().split('T')[0] : "",
+        transfusionFrequency: patient.manual_transfusion_frequency || "",
+        poorGrowthHistory: patient.poor_growth_history || false,
+        boneDeformities: patient.bone_deformities || false,
+        recurrentInfections: patient.recurrent_infections || false,
+        organIssuesHistory: patient.organ_issues_history || "",
       });
     }
   }, [patient, isOpen]);
@@ -93,26 +109,61 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateHealthMutation.mutate({
-      hemoglobinLevel: formData.hemoglobinLevel,
-      ironLevels: formData.ironLevels,
-      weight: formData.weight,
-      symptomsBetweenTransfusions: formData.symptoms,
-      chelationMedication: formData.chelationMedication,
-      chelationFrequency: formData.chelationFrequency,
-      lastSerumFerritin: formData.lastSerumFerritin,
-      adverseReactionsHistory: formData.adverseReactions,
-      diagnosis: formData.diagnosis,
-      thalassemiaType: formData.thalassemiaType,
-      ironChelationTherapy: formData.ironChelationTherapy,
-      recentPreTransfusionHb: formData.recentPreTransfusionHb,
-      usualTransfusionHbLevel: formData.usualTransfusionHbLevel,
-      unitsPerSession: formData.unitsPerSession ? parseInt(formData.unitsPerSession) : null,
-      lastLiverIronMeasurement: formData.lastLiverIronMeasurement,
-      recentIntervalChanges: formData.recentIntervalChanges,
-    });
+    setLoading(true);
+
+    try {
+      // Convert form data to match backend expectations
+      const updateData = {
+        hemoglobin_level: formData.hemoglobinLevel,
+        iron_levels: formData.ironLevels,
+        weight: formData.weight,
+        last_transfusion: formData.lastTransfusion ? new Date(formData.lastTransfusion).toISOString() : null,
+        next_transfusion_date: formData.nextTransfusionDate ? new Date(formData.nextTransfusionDate).toISOString() : null,
+        manual_transfusion_frequency: formData.transfusionFrequency || null,
+        diagnosis: formData.diagnosis || null,
+        recent_pre_transfusion_hb: formData.recentPreTransfusionHb || null,
+        symptoms_between_transfusions: formData.symptomsBetweenTransfusions || null,
+        iron_chelation_therapy: formData.ironChelationTherapy || null,
+        chelation_medication: formData.chelationMedication || null,
+        chelation_frequency: formData.chelationFrequency || null,
+        last_serum_ferritin: formData.lastSerumFerritin || null,
+        poor_growth_history: formData.poorGrowthHistory || false,
+        boneDeformities: formData.boneDeformities || false,
+        recurrentInfections: formData.recurrentInfections || false,
+        organIssuesHistory: formData.organIssuesHistory || null
+      };
+
+      const response = await fetch(`/api/patients/${patientId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['/api/patients/user', patient.userId] });
+        toast({
+          title: "Success",
+          description: "Health metrics updated successfully",
+        });
+        onClose();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update health metrics');
+      }
+    } catch (error) {
+      console.error('Health update error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update health metrics",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -229,6 +280,35 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
                 />
               </div>
             </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="lastTransfusion">Last Transfusion Date</Label>
+                <Input
+                  id="lastTransfusion"
+                  type="date"
+                  value={formData.lastTransfusion}
+                  onChange={(e) => setFormData(prev => ({ ...prev, lastTransfusion: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="nextTransfusionDate">Next Transfusion Date</Label>
+                <Input
+                  id="nextTransfusionDate"
+                  type="date"
+                  value={formData.nextTransfusionDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nextTransfusionDate: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="transfusionFrequency">Transfusion Frequency</Label>
+                <Input
+                  id="transfusionFrequency"
+                  value={formData.transfusionFrequency}
+                  onChange={(e) => setFormData(prev => ({ ...prev, transfusionFrequency: e.target.value }))}
+                  placeholder="e.g., Every 4 weeks"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Symptoms and Changes */}
@@ -238,8 +318,8 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
               <Label htmlFor="symptoms">Symptoms Between Transfusions</Label>
               <Textarea
                 id="symptoms"
-                value={formData.symptoms}
-                onChange={(e) => setFormData(prev => ({ ...prev, symptoms: e.target.value }))}
+                value={formData.symptomsBetweenTransfusions}
+                onChange={(e) => setFormData(prev => ({ ...prev, symptomsBetweenTransfusions: e.target.value }))}
                 placeholder="Describe any symptoms you experience..."
               />
             </div>
@@ -316,18 +396,62 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
             <Label htmlFor="reactions">Adverse Reactions History</Label>
             <Textarea
               id="reactions"
-              value={formData.adverseReactions}
-              onChange={(e) => setFormData(prev => ({ ...prev, adverseReactions: e.target.value }))}
+              value={formData.adverseReactionsHistory}
+              onChange={(e) => setFormData(prev => ({ ...prev, adverseReactionsHistory: e.target.value }))}
               placeholder="Any adverse reactions to medications or treatments..."
             />
           </div>
+
+          {/* Other Health Issues */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Other Health Issues</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="poorGrowth">Poor Growth History</Label>
+                <Input
+                  id="poorGrowth"
+                  type="checkbox"
+                  checked={formData.poorGrowthHistory}
+                  onChange={(e) => setFormData(prev => ({ ...prev, poorGrowthHistory: e.target.checked }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="boneDeformities">Bone Deformities</Label>
+                <Input
+                  id="boneDeformities"
+                  type="checkbox"
+                  checked={formData.boneDeformities}
+                  onChange={(e) => setFormData(prev => ({ ...prev, boneDeformities: e.target.checked }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="recurrentInfections">Recurrent Infections</Label>
+                <Input
+                  id="recurrentInfections"
+                  type="checkbox"
+                  checked={formData.recurrentInfections}
+                  onChange={(e) => setFormData(prev => ({ ...prev, recurrentInfections: e.target.checked }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="organIssues">Organ Issues History</Label>
+              <Textarea
+                id="organIssues"
+                value={formData.organIssuesHistory}
+                onChange={(e) => setFormData(prev => ({ ...prev, organIssuesHistory: e.target.value }))}
+                placeholder="Describe any history of organ issues..."
+              />
+            </div>
+          </div>
+
 
           <div className="flex justify-end space-x-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updateHealthMutation.isPending}>
-              {updateHealthMutation.isPending ? "Updating..." : "Update Health Data"}
+            <Button type="submit" disabled={loading}>
+              {loading ? "Updating..." : "Update Health Data"}
             </Button>
           </div>
         </form>

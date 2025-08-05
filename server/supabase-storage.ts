@@ -256,7 +256,6 @@ export class SupabaseStorage implements IStorage {
       eligibility_status: donor.eligibilityStatus || true,
       total_donations: donor.totalDonations || 0,
       available_for_donation: donor.availableForDonation || true
-      
     };
 
     const { data, error } = await supabase

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Calendar, Users, Droplet, TrendingUp } from "lucide-react";
 import { type AuthUser } from "@/lib/auth";
-import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 
 interface HospitalDashboardProps {
   user: AuthUser;
@@ -18,7 +18,11 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
 
   const { data: todayAppointmentsData } = useQuery({
     queryKey: ['appointments', 'today', provider?.id],
-    queryFn: () => apiRequest('GET', `/api/appointments/today/${provider?.id}`),
+    queryFn: async () => {
+      const response = await fetch(`/api/appointments/today/${provider?.id}`);
+      if (!response.ok) throw new Error('Failed to fetch appointments');
+      return response.json();
+    },
     enabled: !!provider?.id,
   });
 

@@ -45,13 +45,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create role-specific profile
       if (user.role === "patient") {
         await storage.createPatient({ 
-          userId: user.id, 
-          blood_group: userData.blood_group 
+          userId: user.id
         });
       } else if (user.role === "donor") {
         await storage.createDonor({ 
-          userId: user.id, 
-          blood_group: userData.blood_group 
+          userId: user.id
         });
       } else if (user.role === "healthcare_provider") {
         await storage.createHealthcareProvider({ 
@@ -524,6 +522,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Intelligent donor reminder system based on donation history
+  app.post("/api/notifications/smart-donor-reminders", async (req, res) => {
+    try {
+      const now = new Date();
+
+      // Get all donors with their donation history
+      const { data: donors, error: donorError } = await supabase
+        .from('donors')
+        .select(`
+          id,
+          user_id,
+          last_donation,
+          total_donations,
+          users!inner(id, name, email)
+        `);
+
+      if (donorError || !donors) {
+        console.error('Error fetching donors:', donorError);
+        return res.status(500).json({ message: "Failed to fetch donors" });
+      }
+
+      for (const donor of donors) {
+        // Get donation history from donors_donations table
+        const { data: donationHistory, error: historyError } = await supabase
+          .from('donors_donations')
+          .select('scheduled_date, status')
+          .eq('donor_id', donor.id)
+          .eq('status', 'completed')
+          .order('scheduled_date', { ascending: false })
+          .limit(5);
+
+        if (historyError) continue;
+
+        // Calculate donation frequency if we have enough history
+        if (donationHistory && donationHistory.length >= 2) {
+          const intervals = [];
+          for (let i = 1; i < donationHistory.length; i++) {
+            const current = new Date(donationHistory[i-1].scheduled_date);
+            const previous = new Date(donationHistory[i].scheduled_date);
+            const intervalDays = Math.floor((current.getTime() - previous.getTime()) / (1000 * 60 * 60 * 24));
+            intervals.push(intervalDays);
+          }
+
+          // Calculate average interval
+          const avgInterval = Math.floor(intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length);
+          const lastDonationDate = new Date(donationHistory[0].scheduled_date);
+          const daysSinceLastDonation = Math.floor((now.getTime() - lastDonationDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          // Send reminder if it's been 80% of their average interval
+          const reminderThreshold = Math.floor(avgInterval * 0.8);
+          
+          if (daysSinceLastDonation >= reminderThreshold && daysSinceLastDonation >= 56) { // Minimum 8 weeks between donations
+            const daysUntilDue = avgInterval - daysSinceLastDonation;
+            let message;
+            
+            if (daysUntilDue <= 0) {
+              message = `It's time for your regular donation! Based on your history, you typically donate every ${Math.floor(avgInterval/30)} months. Your next donation is due now.`;
+            } else {
+              message = `Reminder: Your next donation is due in ${daysUntilDue} days. Based on your donation pattern, you typically donate every ${Math.floor(avgInterval/30)} months.`;
+            }
+
+            await storage.createNotification({
+              userId: donor.user_id,
+              title: "Donation Reminder - Your Regular Schedule",
+              message: message,
+              type: "smart_donation_reminder"
+            });
+          }
+        } else if (donor.last_donation) {
+          // For donors with limited history, use a standard 3-month reminder
+          const lastDonation = new Date(donor.last_donation);
+          const daysSinceLastDonation = Math.floor((now.getTime() - lastDonation.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysSinceLastDonation >= 84) { // 12 weeks = 3 months
+            await storage.createNotification({
+              userId: donor.user_id,
+              title: "Donation Reminder",
+              message: "It's been 3 months since your last donation. Consider scheduling a new appointment to help patients in need.",
+              type: "standard_donation_reminder"
+            });
+          }
+        }
+      }
+
+      res.json({ message: "Smart donor reminders sent successfully" });
+    } catch (error) {
+      console.error("Error sending smart reminders:", error);
+      res.status(500).json({ message: "Failed to send smart reminders" });
+    }
+  });
+
   // Smart notification system
   app.post("/api/notifications/send-reminders", async (req, res) => {
     try {
@@ -860,6 +949,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching donor family:", error);
       res.status(500).json({ error: "Failed to fetch donor family" });
+    }
+  });
+
+  // Get upcoming patient appointments for healthcare provider
+  app.get("/api/providers/:providerId/patient-appointments", async (req, res) => {
+    try {
+      const { providerId } = req.params;
+      
+      // Get provider's hospital name
+      const provider = await storage.getHealthcareProvider(providerId);
+      if (!provider) {
+        return res.status(404).json({ message: "Provider not found" });
+      }
+
+      const providerUser = await storage.getUser(provider.userId);
+      const hospitalName = providerUser?.name;
+
+      if (!hospitalName) {
+        return res.status(400).json({ message: "Hospital name not found" });
+      }
+
+      // Get patient transfusions at this hospital
+      const { data: appointments, error } = await supabase
+        .from('patient_transfusions')
+        .select(`
+          *,
+          patients!inner(
+            *,
+            users!inner(*)
+          )
+        `)
+        .eq('status', 'scheduled')
+        .gte('scheduled_date', new Date().toISOString())
+        .ilike('location', `%${hospitalName.split(',')[0]}%`)
+        .order('scheduled_date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching patient appointments:', error);
+        return res.status(500).json({ message: "Failed to fetch appointments" });
+      }
+
+      res.json(appointments || []);
+    } catch (error) {
+      console.error("Error fetching patient appointments:", error);
+      res.status(500).json({ error: "Failed to fetch appointments" });
+    }
+  });
+
+  // Get upcoming donor appointments for healthcare provider
+  app.get("/api/providers/:providerId/donor-appointments", async (req, res) => {
+    try {
+      const { providerId } = req.params;
+      
+      // Get provider's hospital name
+      const provider = await storage.getHealthcareProvider(providerId);
+      if (!provider) {
+        return res.status(404).json({ message: "Provider not found" });
+      }
+
+      const providerUser = await storage.getUser(provider.userId);
+      const hospitalName = providerUser?.name;
+
+      if (!hospitalName) {
+        return res.status(400).json({ message: "Hospital name not found" });
+      }
+
+      // Get donor donations at this hospital
+      const { data: appointments, error } = await supabase
+        .from('donors_donations')
+        .select(`
+          *,
+          donors!inner(
+            *,
+            users!inner(*)
+          )
+        `)
+        .eq('status', 'scheduled')
+        .gte('scheduled_date', new Date().toISOString())
+        .ilike('location', `%${hospitalName.split(',')[0]}%`)
+        .order('scheduled_date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching donor appointments:', error);
+        return res.status(500).json({ message: "Failed to fetch appointments" });
+      }
+
+      res.json(appointments || []);
+    } catch (error) {
+      console.error("Error fetching donor appointments:", error);
+      res.status(500).json({ error: "Failed to fetch appointments" });
     }
   });
 
