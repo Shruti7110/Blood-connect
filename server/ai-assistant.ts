@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { spawn } from 'child_process';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import fs from 'fs'; // Import fs module
 
 interface ChatRequest {
@@ -103,6 +104,8 @@ export async function handleAIChat(req: any, res: any, options: any = {}) {
     console.log('UserData prepared for Python script:', userData);
 
     // Determine the Python script path
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
     const scriptPath = path.join(__dirname, 'talking_assistant.py');
     console.log('Python script path:', scriptPath);
 

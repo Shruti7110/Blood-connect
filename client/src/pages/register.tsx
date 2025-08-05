@@ -246,7 +246,7 @@ export default function Register() {
                 <Select
                   value={formData.blood_group}
                   onValueChange={(value) =>
-                    handleInputChange("bloodGroup", value)
+                    handleInputChange("blood_group", value)
                   }
                 >
                   <SelectTrigger>

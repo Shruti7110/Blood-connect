@@ -231,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: patient.users.email,
           phone: patient.users.phone,
           location: patient.users.location,
-          blood_group: patient.users.blood_group
+          bloodGroup: patient.users.blood_group
         }
       })) || [];
 
@@ -295,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: donor.users.email,
           phone: donor.users.phone,
           location: donor.users.location,
-          blood_group: donor.users.blood_group
+          bloodGroup: donor.users.blood_group
         }
       })) || [];
 
