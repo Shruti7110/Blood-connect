@@ -40,6 +40,13 @@ export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
+  const [patient, setPatient] = useState({
+    // Initialize with default values or fetch if it's an edit form
+    medicalHistory: "",
+    allergies: "",
+    currentMedications: "",
+  });
+
   const handleBasicRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -52,10 +59,10 @@ export default function Register() {
         name: formData.name,
         phone: formData.phone || undefined,
         location: formData.location || undefined,
-        blood_group: formData.blood_group,
+        bloodGroup: formData.blood_group,
       });
 
-      setUserId(response.user.id);
+      setUserId(response.id);
 
       if (formData.role === "patient") {
         setStep(2);
@@ -92,11 +99,10 @@ export default function Register() {
         "GET",
         `/api/patients/user/${userId}`,
       );
-
       // Update patient with detailed information
       await apiRequest(
         "PUT",
-        `/api/patients/${patientProfile.id}`,
+        `/api/patients/${(patientProfile as any)?.id}`,
         patientData,
       );
 
@@ -121,10 +127,18 @@ export default function Register() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleCancel = () => {
+    setStep(1); // Go back to the basic registration form
+  };
+
   if (step === 2 && formData.role === "patient") {
     return (
       <div className="min-h-screen bg-background-alt flex items-center justify-center p-4">
-        <PatientDetailsForm onSubmit={handlePatientDetails} loading={loading} />
+        <PatientDetailsForm
+          onSubmit={handlePatientDetails}
+          patient={patient}
+          onCancel={handleCancel}
+        />
       </div>
     );
   }
@@ -228,11 +242,11 @@ export default function Register() {
 
             {formData.role !== "healthcare_provider" && (
               <div>
-                <Label htmlFor="blood_group">Blood Group</Label>
+                <Label htmlFor="bloodGroup">Blood Group</Label>
                 <Select
                   value={formData.blood_group}
                   onValueChange={(value) =>
-                    handleInputChange("blood_group", value)
+                    handleInputChange("bloodGroup", value)
                   }
                 >
                   <SelectTrigger>
