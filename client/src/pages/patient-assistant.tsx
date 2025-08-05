@@ -63,6 +63,8 @@ export default function PatientAssistant({ user }: PatientAssistantProps) {
           message: input,
           userId: user.id,
           userRole: user.role,
+          userName: user.name,
+          userEmail: user.email,
         }),
       });
 

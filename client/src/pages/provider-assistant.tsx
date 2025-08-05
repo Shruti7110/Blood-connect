@@ -69,7 +69,9 @@ export default function ProviderAssistant({ user }: ProviderAssistantProps) {
           message: input,
           userId: user.id,
           userRole: user.role,
-          providerId: provider?.id, // Include providerId if available
+          userName: user.name,
+          userEmail: user.email,
+          providerId: provider?.id,
         }),
       });
 

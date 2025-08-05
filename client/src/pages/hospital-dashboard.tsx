@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Calendar, Users, Droplet, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Users, Heart, Droplet, Activity, Bot } from "lucide-react";
 import { type AuthUser } from "@/lib/auth";
 import { queryClient } from "@/lib/queryClient";
 
@@ -74,21 +75,25 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
           <p className="text-gray-600">Healthcare Provider Dashboard</p>
         </div>
 
-        {/* Today's Appointments Summary */}
+        {/* Main Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Today's Patient Appointments */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Patient Appointments Today</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {todayAppointmentsData?.patientAppointments?.length || 0}
               </div>
-              <p className="text-xs text-muted-foreground">At your location today</p>
+              <p className="text-xs text-muted-foreground">
+                Transfusions scheduled
+              </p>
             </CardContent>
           </Card>
 
+          {/* Today's Donor Appointments */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Donor Appointments Today</CardTitle>
@@ -98,69 +103,110 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
               <div className="text-2xl font-bold">
                 {todayAppointmentsData?.donorAppointments?.length || 0}
               </div>
-              <p className="text-xs text-muted-foreground">At your location today</p>
+              <p className="text-xs text-muted-foreground">
+                Donations scheduled
+              </p>
             </CardContent>
           </Card>
 
+          {/* Total Patients */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {patients?.length || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">Registered patients</p>
+              <div className="text-2xl font-bold">{patients?.length || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Registered patients
+              </p>
             </CardContent>
           </Card>
 
+          {/* Available Donors */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Donors</CardTitle>
-              <Droplet className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Available Donors</CardTitle>
+              <Heart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {donors?.length || 0}
+                {donors?.filter(d => d.availableForDonation)?.length || 0}
               </div>
-              <p className="text-xs text-muted-foreground">Registered donors</p>
+              <p className="text-xs text-muted-foreground">
+                Ready to donate
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Blood Availability by Type */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Droplet className="w-5 h-5 text-red-500" />
-              <span>Blood Units Available by Type</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-              {bloodAvailability.map((blood) => (
-                <div key={blood.type} className="text-center">
-                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-2 ${
-                    blood.status === 'high' ? 'bg-green-100 text-green-700' :
-                    blood.status === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-red-100 text-red-700'
-                  }`}>
-                    <span className="font-bold text-lg">{blood.type}</span>
+        {/* Blood Inventory and Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Blood Inventory */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Droplet className="w-5 h-5 text-red-500" />
+                <span>Blood Inventory Status</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                {bloodAvailability.map((blood) => (
+                  <div key={blood.type} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium">{blood.type}</p>
+                      <p className="text-sm text-gray-600">{blood.units} units</p>
+                    </div>
+                    <Badge
+                      variant={blood.status === 'high' ? 'default' : blood.status === 'medium' ? 'secondary' : 'destructive'}
+                    >
+                      {blood.status}
+                    </Badge>
                   </div>
-                  <p className="text-2xl font-bold">{blood.units}</p>
-                  <p className="text-xs text-gray-500">units</p>
-                  <Badge 
-                    variant={blood.status === 'high' ? 'default' : 'destructive'}
-                    className="text-xs mt-1"
-                  >
-                    {blood.status === 'high' ? 'Good' : blood.status === 'medium' ? 'Medium' : 'Low'}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Activity className="w-5 h-5 text-blue-500" />
+                <span>Quick Actions</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = '/hospital-patients'}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Patients
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = '/hospital-donors'}
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Manage Donors
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => window.location.href = '/provider-assistant'}
+                >
+                  <Bot className="w-4 h-4 mr-2" />
+                  AI Assistant
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Low Stock Notifications */}
         {lowStockPatients.length > 0 && (

@@ -141,9 +141,7 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-md"
               />
-              <Button onClick={() => setShowComprehensiveForm(true)}>            
-                Add All Patient Details
-              </Button>
+              
             </div>
           </CardHeader>
           <CardContent>

@@ -69,7 +69,9 @@ export default function DonorAssistant({ user }: DonorAssistantProps) {
           message: input,
           userId: user.id,
           userRole: user.role,
-          donorId: donor?.id // Include donorId here
+          userName: user.name,
+          userEmail: user.email,
+          donorId: donor?.id
         }),
       });
 

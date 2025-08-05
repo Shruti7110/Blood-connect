@@ -50,19 +50,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         if (user.role === "patient") {
           console.log(`Creating patient profile for user ${user.id}`);
-          const patient = await storage.createPatient({ 
+          const patient = await storage.createPatient({
             userId: user.id
           });
           console.log("Created patient:", patient.id);
         } else if (user.role === "donor") {
           console.log(`Creating donor profile for user ${user.id}`);
-          const donor = await storage.createDonor({ 
+          const donor = await storage.createDonor({
             userId: user.id
           });
           console.log("Created donor:", donor.id);
         } else if (user.role === "healthcare_provider") {
           console.log(`Creating healthcare provider profile for user ${user.id}`);
-          const provider = await storage.createHealthcareProvider({ 
+          const provider = await storage.createHealthcareProvider({
             userId: user.id,
             hospitalName: userData.name // Use the name as hospital name
           });
@@ -71,9 +71,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (profileError: any) {
         console.error(`Failed to create ${user.role} profile:`, profileError);
         // Don't delete the user, just report the error
-        return res.status(500).json({ 
-          message: `User created but failed to create ${user.role} profile`, 
-          error: profileError.message 
+        return res.status(500).json({
+          message: `User created but failed to create ${user.role} profile`,
+          error: profileError.message
         });
       }
 
@@ -591,11 +591,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Send reminder if it's been 80% of their average interval
           const reminderThreshold = Math.floor(avgInterval * 0.8);
-          
+
           if (daysSinceLastDonation >= reminderThreshold && daysSinceLastDonation >= 56) { // Minimum 8 weeks between donations
             const daysUntilDue = avgInterval - daysSinceLastDonation;
             let message;
-            
+
             if (daysUntilDue <= 0) {
               message = `It's time for your regular donation! Based on your history, you typically donate every ${Math.floor(avgInterval/30)} months. Your next donation is due now.`;
             } else {
@@ -613,7 +613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // For donors with limited history, use a standard 3-month reminder
           const lastDonation = new Date(donor.last_donation);
           const daysSinceLastDonation = Math.floor((now.getTime() - lastDonation.getTime()) / (1000 * 60 * 60 * 24));
-          
+
           if (daysSinceLastDonation >= 84) { // 12 weeks = 3 months
             await storage.createNotification({
               userId: donor.user_id,
@@ -976,15 +976,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { providerId } = req.params;
       console.log('Fetching patient appointments for provider:', providerId);
-      
+
       // Get provider's hospital name
       const provider = await storage.getHealthcareProvider(providerId);
       if (!provider) {
         return res.status(404).json({ message: "Provider not found" });
       }
 
-      const providerUser = await storage.getUser(provider.userId);
-      const hospitalName = providerUser?.name;
+      const hospitalName = provider.hospitalName || provider.hospital_name;
       console.log('Provider hospital name:', hospitalName);
 
       if (!hospitalName) {
@@ -1032,15 +1031,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { providerId } = req.params;
       console.log('Fetching donor appointments for provider:', providerId);
-      
+
       // Get provider's hospital name
       const provider = await storage.getHealthcareProvider(providerId);
       if (!provider) {
         return res.status(404).json({ message: "Provider not found" });
       }
 
-      const providerUser = await storage.getUser(provider.userId);
-      const hospitalName = providerUser?.name;
+      const hospitalName = provider.hospitalName || provider.hospital_name;
       console.log('Provider hospital name:', hospitalName);
 
       if (!hospitalName) {
@@ -1088,12 +1086,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { providerId } = req.params;
       console.log('Fetching today\'s appointments for provider:', providerId);
-      
+
       // Use UTC dates to avoid timezone issues
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
       const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-      
+
       console.log('Today date range:', {
         start: todayStart.toISOString(),
         end: todayEnd.toISOString()
@@ -1106,15 +1104,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Provider not found" });
       }
 
-      const providerUser = await storage.getUser(provider.userId);
-      const providerLocation = providerUser?.name;
-      console.log('Provider location:', providerLocation);
+      const hospitalName = provider.hospitalName || provider.hospital_name;
+      console.log('Provider location:', hospitalName);
 
-      if (!providerLocation) {
+      if (!hospitalName) {
         return res.status(400).json({ message: "Provider location not found" });
       }
 
-      const hospitalKeyword = providerLocation.split(',')[0].trim();
+      const hospitalKeyword = hospitalName.split(',')[0].trim();
       console.log('Filtering by hospital keyword:', hospitalKeyword);
 
       // Get patient transfusions for today at this location

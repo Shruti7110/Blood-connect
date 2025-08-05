@@ -74,56 +74,60 @@
   .bg-surface {
     background-color: var(--surface);
   }
-  
+
   .bg-background-alt {
     background-color: var(--background-alt);
   }
-  
+
   .text-success {
     color: hsl(var(--success));
   }
-  
+
   .text-warning {
     color: hsl(var(--warning));
   }
-  
+
   .bg-success {
     background-color: hsl(var(--success));
   }
-  
+
   .bg-warning {
     background-color: hsl(var(--warning));
   }
-  
+
   .bg-success\/10 {
     background-color: hsl(var(--success) / 0.1);
   }
-  
+
   .bg-warning\/10 {
     background-color: hsl(var(--warning) / 0.1);
   }
-  
+
   .bg-secondary\/10 {
     background-color: hsl(var(--secondary) / 0.1);
   }
-  
+
   .bg-accent\/10 {
     background-color: hsl(var(--accent) / 0.1);
   }
-  
+
   .border-success\/20 {
     border-color: hsl(var(--success) / 0.2);
   }
-  
+
   .border-warning\/20 {
     border-color: hsl(var(--warning) / 0.2);
   }
-  
+
   .border-secondary\/20 {
     border-color: hsl(var(--secondary) / 0.2);
   }
-  
+
   .border-accent\/20 {
     border-color: hsl(var(--accent) / 0.2);
   }
+}
+
+.min-h-screen.bg-background {
+  background: linear-gradient(135deg, #e6e6fa 0%, #d8bfd8 100%);
 }
