@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +21,7 @@ export function AIAssistant({ user }: AIAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const getRoleSpecificWelcome = () => {
     switch (user.role) {
@@ -30,7 +30,7 @@ export function AIAssistant({ user }: AIAssistantProps) {
       case 'patient':
         return `Hello ${user.name}! I'm your AI assistant for transfusion management. I can help you schedule transfusions, view your upcoming appointments, check your health metrics, and connect you with your donor family. How can I help you today?`;
       case 'healthcare_provider':
-        return `Hello ${user.name}! I'm your AI assistant for healthcare management. I can help you manage patient appointments, track blood inventory, coordinate between donors and patients, and generate reports for your facility. How can I help you today?`;
+        return `Hello ${user.name}! I'm your AI assistant for healthcare management. I can help you manage patient appointments, track blood inventory, coordinate between donors and patients, and generate reports for your facility. When scheduling an appointment, please choose from Apollo Hospital, Bannerghatta, Narayana Health, Electronic City, or Manipal Hospital, Whitefield. How can I help you today?`;
       default:
         return `Hello ${user.name}! I'm your AI assistant. How can I help you today?`;
     }
@@ -81,7 +81,7 @@ export function AIAssistant({ user }: AIAssistantProps) {
       }
 
       const data = await response.json();
-      
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: data.response,
@@ -110,6 +110,15 @@ export function AIAssistant({ user }: AIAssistantProps) {
       sendMessage();
     }
   };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -171,8 +180,9 @@ export function AIAssistant({ user }: AIAssistantProps) {
                 </div>
               )}
             </div>
+            <div ref={messagesEndRef} />
           </ScrollArea>
-          
+
           <div className="flex space-x-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <Input
               value={input}
@@ -182,8 +192,8 @@ export function AIAssistant({ user }: AIAssistantProps) {
               disabled={isLoading}
               className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             />
-            <Button 
-              onClick={sendMessage} 
+            <Button
+              onClick={sendMessage}
               disabled={!input.trim() || isLoading}
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6"
             >

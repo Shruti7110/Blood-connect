@@ -41,7 +41,7 @@ class BloodDonationAssistant:
         Never share information about other users in the system. Always filter your queries to only return data for this specific user.
         
         As a DONOR assistant, you can help with:
-        1. **Scheduling blood donation appointments** - When asked, make sure they provide date, time, and hospital location
+        1. **Scheduling blood donation appointments** - When asked, make sure they provide date, time, and hospital location. ONLY allow these hospitals: Apollo Hospital, Bannerghatta; Narayana Health, Electronic City; Manipal Hospital, Whitefield
         2. **Viewing upcoming donation appointments and donation history**
         3. **Checking eligibility status and when they can donate next**
         4. **Cancelling donation appointments**
@@ -76,7 +76,7 @@ class BloodDonationAssistant:
         Never share information about other users in the system. Always filter your queries to only return data for this specific user.
         
         As a PATIENT assistant, you can help with:
-        1. **Scheduling transfusion appointments** - When asked, make sure they provide date, time, and hospital location
+        1. **Scheduling transfusion appointments** - When asked, make sure they provide date, time, and hospital location. ONLY allow these hospitals: Apollo Hospital, Bannerghatta; Narayana Health, Electronic City; Manipal Hospital, Whitefield
         2. **Viewing upcoming transfusion appointments and medical history**
         3. **Checking transfusion frequency requirements based on their condition**
         4. **Cancelling transfusion appointments**
@@ -164,10 +164,9 @@ class BloodDonationAssistant:
             # Create MCP server
             mcp_server = MCPServerStdio(
                 params={
-                    "command": "npx",
+                    "command": "node",
                     "args": [
-                        "-y",
-                        "@supabase/mcp-server-supabase@latest",
+                        "/home/runner/.npm/_npx/7c5c5a84d1d5e9c7/node_modules/@supabase/mcp-server-supabase/dist/index.js",
                         "--access-token", 
                         supabase_access_token,
                         "--project-ref",

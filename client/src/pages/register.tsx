@@ -52,7 +52,7 @@ export default function Register() {
         name: formData.name,
         phone: formData.phone || undefined,
         location: formData.location || undefined,
-        blood_group: formData.blood_group || undefined,
+        blood_group: formData.blood_group,
       });
 
       setUserId(response.user.id);
@@ -211,12 +211,19 @@ export default function Register() {
 
             <div>
               <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
+              <Select
                 value={formData.location}
-                onChange={(e) => handleInputChange("location", e.target.value)}
-                placeholder="City, State"
-              />
+                onValueChange={(value) => handleInputChange("location", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Bannerghatta, Bangalore">Bannerghatta, Bangalore</SelectItem>
+                  <SelectItem value="Electronic City, Bangalore">Electronic City, Bangalore</SelectItem>
+                  <SelectItem value="Whitefield, Bangalore">Whitefield, Bangalore</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>

@@ -50,7 +50,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   phone: text("phone"),
   location: text("location"),
-  bloodGroup: bloodGroupEnum("blood_group"),
+  blood_group: bloodGroupEnum("blood_group"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -39,9 +39,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create role-specific profile
       if (user.role === "patient") {
-        await storage.createPatient({ userId: user.id });
+        // Ensure blood_group is handled correctly during patient creation
+        await storage.createPatient({ userId: user.id, blood_group: userData.blood_group });
       } else if (user.role === "donor") {
-        await storage.createDonor({ userId: user.id });
+        // Ensure blood_group is handled correctly during donor creation
+        await storage.createDonor({ userId: user.id, blood_group: userData.blood_group });
       } else if (user.role === "healthcare_provider") {
         await storage.createHealthcareProvider({ userId: user.id });
       }
@@ -51,8 +53,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Registration error:", error);
       if (error.name === 'ZodError') {
         console.error("Validation errors:", error.errors);
-        res.status(400).json({ 
-          message: "Invalid user data", 
+        res.status(400).json({
+          message: "Invalid user data",
           details: error.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`)
         });
       } else {
@@ -91,12 +93,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/users/:id", async (req, res) => {
     try {
-      const updatedUser = await storage.updateUser(req.params.id, req.body);
+      // When updating user, ensure blood_group is also updated if provided
+      const { blood_group, ...updates } = req.body;
+      let updatedUser = await storage.updateUser(req.params.id, updates);
+
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
+
+      // Update blood_group in the user table if it exists and the user is a patient or donor
+      if (blood_group) {
+        await supabase.from('users').update({ blood_group: blood_group }).eq('id', req.params.id);
+        // Also update it in the respective profile tables if they exist
+        const patient = await storage.getPatientByUserId(req.params.id);
+        if (patient) {
+          await storage.updatePatient(patient.id, { blood_group });
+        }
+        const donor = await storage.getDonorByUserId(req.params.id);
+        if (donor) {
+          await storage.updateDonor(donor.id, { blood_group });
+        }
+        // Re-fetch the user to include the updated blood_group
+        updatedUser = await storage.getUser(req.params.id);
+      }
+
       res.json({ ...updatedUser, password: undefined });
     } catch (error) {
+      console.error("Error updating user:", error);
       res.status(500).json({ message: "Failed to update user" });
     }
   });
@@ -116,9 +139,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/patients/:id", async (req, res) => {
     try {
-      const updatedPatient = await storage.updatePatient(req.params.id, req.body);
+      // Ensure blood_group is handled correctly when updating patient
+      const { blood_group, ...updates } = req.body;
+      const updatedPatient = await storage.updatePatient(req.params.id, updates);
       if (!updatedPatient) {
         return res.status(404).json({ message: "Patient not found" });
+      }
+      // Update blood_group in the user table if it exists and is provided
+      if (blood_group) {
+        const patient = await storage.getPatient(req.params.id);
+        if (patient) {
+          await supabase.from('users').update({ blood_group: blood_group }).eq('id', patient.userId);
+        }
       }
       res.json(updatedPatient);
     } catch (error) {
@@ -402,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           last_donation: item.donors?.last_donation,
           eligibility_status: item.donors?.eligibility_status
         },
-        // Map user data to expected structure  
+        // Map user data to expected structure
         user: {
           id: item.donors?.users?.id,
           name: item.donors?.users?.name,
@@ -492,10 +524,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select(`
           id,
           user_id,
-          last_donation,
-          users!inner(name)
+          last_donation_date,
+          users!inner(id, name, blood_group)
         `)
-        .or(`last_donation.is.null,last_donation.lt.${threeMonthsAgo.toISOString()}`);
+        .or(`last_donation_date.is.null,last_donation_date.lt.${threeMonthsAgo.toISOString()}`);
 
       if (!donorError && donors) {
         for (const donor of donors) {
@@ -652,8 +684,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (error) {
         console.error("Supabase error object:", error);
-        return res.status(500).json({ 
-          message: "Failed to create donation", 
+        return res.status(500).json({
+          message: "Failed to create donation",
           error: String(error),
           details: error
         });
@@ -836,6 +868,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const providerUser = await storage.getUser(provider.userId);
       const providerLocation = providerUser?.location;
 
+      if (!providerLocation) {
+        return res.status(400).json({ message: "Provider location not found" });
+      }
+
       // Get patient transfusions for today at this location
       const { data: patientTransfusions, error: transfusionError } = await supabase
         .from('patient_transfusions')
@@ -847,7 +883,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         `)
         .gte('scheduled_date', startOfDay.toISOString())
-        .lt('scheduled_date', endOfDay.toISOString())        .eq('location', providerLocation)
+        .lt('scheduled_date', endOfDay.toISOString())
+        .ilike('location', `%${providerLocation.split(',')[0]}%`) // Filter by location, case-insensitive, partial match on the first part (e.g., "Whitefield")
         .eq('status', 'scheduled');
 
       // Get donor donations for today at this location
@@ -862,7 +899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `)
         .gte('scheduled_date', startOfDay.toISOString())
         .lt('scheduled_date', endOfDay.toISOString())
-        .eq('location', providerLocation)
+        .ilike('location', `%${providerLocation.split(',')[0]}%`) // Filter by location, case-insensitive, partial match on the first part (e.g., "Whitefield")
         .eq('status', 'scheduled');
 
       if (transfusionError || donationError) {
@@ -894,7 +931,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // AI Assistant Chat endpoint
   app.post("/api/ai/chat", async (req, res) => {
     try {
-      await handleAIChat(req, res);
+      // Added instruction to restrict hospital locations for scheduling
+      await handleAIChat(req, res, {
+        hospitalOptions: [
+          "Apollo Hospital, Bannerghatta",
+          "Narayana Health, Electronic City",
+          "Manipal Hospital, Whitefield"
+        ]
+      });
     } catch (error) {
       console.error("AI Chat error:", error);
       res.status(500).json({ message: "Failed to process AI chat request." });
@@ -934,8 +978,8 @@ function getCompatibleDonors(patientblood_group: string, patientLocation: string
   const compatibleGroups = BLOOD_GROUP_COMPATIBILITY[patientblood_group as keyof typeof BLOOD_GROUP_COMPATIBILITY] || [];
 
   // Filter donors by compatible blood groups AND matching location
-  const compatibleDonors = allDonors.filter(donor => 
-    compatibleGroups.includes(donor.blood_group) && 
+  const compatibleDonors = allDonors.filter(donor =>
+    compatibleGroups.includes(donor.blood_group) &&
     donor.location === patientLocation
   );
 
