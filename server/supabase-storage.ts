@@ -118,7 +118,6 @@ export class SupabaseStorage implements IStorage {
     // Map camelCase to snake_case for database
     const dbPatient = {
       user_id: patient.userId,
-      blood_group: patient.blood_group || null
     };
 
     const { data, error } = await supabase
@@ -254,10 +253,10 @@ export class SupabaseStorage implements IStorage {
     // Map camelCase to snake_case for database
     const dbDonor = {
       user_id: donor.userId,
-      blood_group: donor.blood_group || null,
       eligibility_status: donor.eligibilityStatus || true,
-      available_for_donation: donor.availableForDonation || true,
-      total_donations: donor.totalDonations || 0
+      total_donations: donor.totalDonations || 0,
+      available_for_donation: donor.availableForDonation || true
+      
     };
 
     const { data, error } = await supabase
