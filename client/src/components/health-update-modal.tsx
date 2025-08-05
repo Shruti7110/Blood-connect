@@ -111,6 +111,14 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!patientId) {
+      console.error("No patient ID provided");
+      return;
+    }
+
+    console.log("Updating health metrics for patient:", patientId);
+    console.log("Health metrics data:", formData);
+
     setLoading(true);
 
     try {
@@ -143,8 +151,13 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
         body: JSON.stringify(updateData),
       });
 
+      console.log("Health update response status:", response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log("Health update successful:", result);
         queryClient.invalidateQueries({ queryKey: ['/api/patients/user', patient.userId] });
+        queryClient.invalidateQueries({ queryKey: ['/api/patients'] });
         toast({
           title: "Success",
           description: "Health metrics updated successfully",
@@ -152,6 +165,7 @@ export function HealthUpdateModal({ isOpen, onClose, patientId }: HealthUpdateMo
         onClose();
       } else {
         const errorData = await response.json();
+        console.error("Health update failed:", errorData);
         throw new Error(errorData.message || 'Failed to update health metrics');
       }
     } catch (error) {

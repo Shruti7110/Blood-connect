@@ -19,6 +19,7 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [showHealthMetrics, setShowHealthMetrics] = useState(false);
   const [showDonorFamily, setShowDonorFamily] = useState(false);
+  const [showComprehensiveForm, setShowComprehensiveForm] = useState(false); // State for the new form
 
   const { data: provider } = useQuery<any>({
     queryKey: ['/api/providers/user', user.id],
@@ -45,7 +46,7 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
   const hospitalAppointments = upcomingTransfusions?.filter(t => {
     const appointmentDate = new Date(t.scheduledDate || t.scheduled_date);
     const now = new Date();
-    
+
     const isAtThisHospital = hospitalName && t.location?.includes(hospitalName);
     const isUpcoming = appointmentDate >= now; // Include appointments starting from now
     return isAtThisHospital && isUpcoming && t.patient_id;
@@ -69,11 +70,11 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
 
   const getDonorAvailabilityStatus = (lastDonation: string) => {
     if (!lastDonation) return { status: 'available', days: 0 };
-    
+
     const lastDonationDate = new Date(lastDonation);
     const now = new Date();
     const daysSinceLastDonation = Math.floor((now.getTime() - lastDonationDate.getTime()) / (1000 * 3600 * 24));
-    
+
     if (daysSinceLastDonation >= 90) { // 3 months
       return { status: 'available', days: daysSinceLastDonation };
     } else {
@@ -140,6 +141,10 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-md"
               />
+              <Button onClick={() => setShowComprehensiveForm(true)}>
+                <FileText className="w-4 h-4 mr-2" />
+                Add All Patient Details
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -158,7 +163,7 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                         <p className="text-sm text-gray-600">{patient.user?.bloodGroup}</p>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Button
                         variant="outline"
@@ -172,7 +177,7 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                         <Heart className="w-4 h-4 mr-2" />
                         View Details
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -185,7 +190,7 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                         <Heart className="w-4 h-4 mr-2" />
                         Update Health Metrics
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -316,7 +321,7 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                             <p className="text-sm text-gray-600">{member.user?.phone}</p>
                           </div>
                           <div className="text-right">
-                            <Badge 
+                            <Badge
                               variant={availability.status === 'available' ? 'default' : 'secondary'}
                               className="mb-2"
                             >
@@ -333,22 +338,35 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                     );
                   })}
                 </div>
-                
+
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                   <h4 className="font-medium mb-2">Blood Availability Check</h4>
                   <p className="text-sm text-gray-600">
-                    Available Donors: {patientFamily.family.filter((m: any) => 
+                    Available Donors: {patientFamily.family.filter((m: any) =>
                       getDonorAvailabilityStatus(m.donor?.last_donation).status === 'available'
                     ).length}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Estimated Available Units: {patientFamily.family.filter((m: any) => 
+                    Estimated Available Units: {patientFamily.family.filter((m: any) =>
                       getDonorAvailabilityStatus(m.donor?.last_donation).status === 'available'
                     ).length * 2}
                   </p>
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Comprehensive Patient Details Form Modal */}
+        <Dialog open={showComprehensiveForm} onOpenChange={setShowComprehensiveForm}>
+          <DialogContent className="max-w-5xl max-h-[90vh]" aria-describedby="comprehensive-patient-form-description">
+            <DialogHeader>
+              <DialogTitle>Add Comprehensive Patient Details</DialogTitle>
+              <p id="comprehensive-patient-form-description" className="text-sm text-gray-600">
+                Fill in all patient details for new or existing patients.
+              </p>
+            </DialogHeader>
+            <PatientDetailsForm />
           </DialogContent>
         </Dialog>
       </div>

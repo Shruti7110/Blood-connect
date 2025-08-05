@@ -42,19 +42,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userData);
       console.log("Created user:", user.id, user.role);
 
+      if (!user || !user.id) {
+        throw new Error("Failed to create user - no ID returned");
+      }
+
       // Create role-specific profile
-      if (user.role === "patient") {
-        await storage.createPatient({ 
-          userId: user.id
-        });
-      } else if (user.role === "donor") {
-        await storage.createDonor({ 
-          userId: user.id
-        });
-      } else if (user.role === "healthcare_provider") {
-        await storage.createHealthcareProvider({ 
-          userId: user.id,
-          hospitalName: userData.name // Use the name as hospital name
+      try {
+        if (user.role === "patient") {
+          console.log(`Creating patient profile for user ${user.id}`);
+          const patient = await storage.createPatient({ 
+            userId: user.id
+          });
+          console.log("Created patient:", patient.id);
+        } else if (user.role === "donor") {
+          console.log(`Creating donor profile for user ${user.id}`);
+          const donor = await storage.createDonor({ 
+            userId: user.id
+          });
+          console.log("Created donor:", donor.id);
+        } else if (user.role === "healthcare_provider") {
+          console.log(`Creating healthcare provider profile for user ${user.id}`);
+          const provider = await storage.createHealthcareProvider({ 
+            userId: user.id,
+            hospitalName: userData.name // Use the name as hospital name
+          });
+          console.log("Created healthcare provider:", provider.id);
+        }
+      } catch (profileError: any) {
+        console.error(`Failed to create ${user.role} profile:`, profileError);
+        // Don't delete the user, just report the error
+        return res.status(500).json({ 
+          message: `User created but failed to create ${user.role} profile`, 
+          error: profileError.message 
         });
       }
 
@@ -956,6 +975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/providers/:providerId/patient-appointments", async (req, res) => {
     try {
       const { providerId } = req.params;
+      console.log('Fetching patient appointments for provider:', providerId);
       
       // Get provider's hospital name
       const provider = await storage.getHealthcareProvider(providerId);
@@ -965,19 +985,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const providerUser = await storage.getUser(provider.userId);
       const hospitalName = providerUser?.name;
+      console.log('Provider hospital name:', hospitalName);
 
       if (!hospitalName) {
         return res.status(400).json({ message: "Hospital name not found" });
       }
 
-      // Get patient transfusions at this hospital
+      // Get patient transfusions at this hospital with proper joins
       const { data: appointments, error } = await supabase
         .from('patient_transfusions')
         .select(`
           *,
           patients!inner(
-            *,
-            users!inner(*)
+            id,
+            user_id,
+            users!inner(
+              id,
+              name,
+              email,
+              phone,
+              blood_group,
+              location
+            )
           )
         `)
         .eq('status', 'scheduled')
@@ -990,6 +1019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Failed to fetch appointments" });
       }
 
+      console.log('Found patient appointments:', appointments?.length || 0);
       res.json(appointments || []);
     } catch (error) {
       console.error("Error fetching patient appointments:", error);
@@ -1001,6 +1031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/providers/:providerId/donor-appointments", async (req, res) => {
     try {
       const { providerId } = req.params;
+      console.log('Fetching donor appointments for provider:', providerId);
       
       // Get provider's hospital name
       const provider = await storage.getHealthcareProvider(providerId);
@@ -1010,19 +1041,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const providerUser = await storage.getUser(provider.userId);
       const hospitalName = providerUser?.name;
+      console.log('Provider hospital name:', hospitalName);
 
       if (!hospitalName) {
         return res.status(400).json({ message: "Hospital name not found" });
       }
 
-      // Get donor donations at this hospital
+      // Get donor donations at this hospital with proper joins
       const { data: appointments, error } = await supabase
         .from('donors_donations')
         .select(`
           *,
           donors!inner(
-            *,
-            users!inner(*)
+            id,
+            user_id,
+            users!inner(
+              id,
+              name,
+              email,
+              phone,
+              blood_group,
+              location
+            )
           )
         `)
         .eq('status', 'scheduled')
@@ -1035,6 +1075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Failed to fetch appointments" });
       }
 
+      console.log('Found donor appointments:', appointments?.length || 0);
       res.json(appointments || []);
     } catch (error) {
       console.error("Error fetching donor appointments:", error);
@@ -1046,22 +1087,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/appointments/today/:providerId", async (req, res) => {
     try {
       const { providerId } = req.params;
-      const today = new Date();
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+      console.log('Fetching today\'s appointments for provider:', providerId);
+      
+      // Use UTC dates to avoid timezone issues
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      
+      console.log('Today date range:', {
+        start: todayStart.toISOString(),
+        end: todayEnd.toISOString()
+      });
 
       // Get provider's location
       const provider = await storage.getHealthcareProvider(providerId);
       if (!provider) {
+        console.log('Provider not found:', providerId);
         return res.status(404).json({ message: "Provider not found" });
       }
 
       const providerUser = await storage.getUser(provider.userId);
       const providerLocation = providerUser?.name;
+      console.log('Provider location:', providerLocation);
 
       if (!providerLocation) {
         return res.status(400).json({ message: "Provider location not found" });
       }
+
+      const hospitalKeyword = providerLocation.split(',')[0].trim();
+      console.log('Filtering by hospital keyword:', hospitalKeyword);
 
       // Get patient transfusions for today at this location
       const { data: patientTransfusions, error: transfusionError } = await supabase
@@ -1069,13 +1123,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select(`
           *,
           patients!inner(
-            *,
-            users!inner(*)
+            id,
+            user_id,
+            users!inner(
+              id,
+              name,
+              email,
+              phone,
+              blood_group,
+              location
+            )
           )
         `)
-        .gte('scheduled_date', startOfDay.toISOString())
-        .lt('scheduled_date', endOfDay.toISOString())
-        .ilike('location', `%${providerLocation.split(',')[0]}%`) // Filter by location, case-insensitive, partial match on the first part (e.g., "Whitefield")
+        .gte('scheduled_date', todayStart.toISOString())
+        .lte('scheduled_date', todayEnd.toISOString())
+        .ilike('location', `%${hospitalKeyword}%`)
         .eq('status', 'scheduled');
 
       // Get donor donations for today at this location
@@ -1084,19 +1146,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select(`
           *,
           donors!inner(
-            *,
-            users!inner(*)
+            id,
+            user_id,
+            users!inner(
+              id,
+              name,
+              email,
+              phone,
+              blood_group,
+              location
+            )
           )
         `)
-        .gte('scheduled_date', startOfDay.toISOString())
-        .lt('scheduled_date', endOfDay.toISOString())
-        .ilike('location', `%${providerLocation.split(',')[0]}%`) // Filter by location, case-insensitive, partial match on the first part (e.g., "Whitefield")
+        .gte('scheduled_date', todayStart.toISOString())
+        .lte('scheduled_date', todayEnd.toISOString())
+        .ilike('location', `%${hospitalKeyword}%`)
         .eq('status', 'scheduled');
 
       if (transfusionError || donationError) {
         console.error('Error fetching appointments:', { transfusionError, donationError });
         return res.status(500).json({ message: "Failed to fetch appointments" });
       }
+
+      console.log('Found appointments:', {
+        patients: patientTransfusions?.length || 0,
+        donors: donorDonations?.length || 0
+      });
 
       res.json({
         patientAppointments: patientTransfusions || [],

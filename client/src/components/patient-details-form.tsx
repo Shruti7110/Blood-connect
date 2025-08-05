@@ -1,53 +1,50 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Calendar, Save, User } from "lucide-react";
 
 interface PatientDetailsFormProps {
+  patient: any;
   onSubmit: (data: any) => void;
-  loading: boolean;
+  onCancel: () => void;
 }
 
-export function PatientDetailsForm({ onSubmit, loading }: PatientDetailsFormProps) {
+export function PatientDetailsForm({ patient, onSubmit, onCancel }: PatientDetailsFormProps) {
   const [formData, setFormData] = useState({
-    // Demographics
-    dateOfBirth: "",
-    weight: "",
-    thalassemiaType: "",
-    
-    // Clinical status
-    recentPreTransfusionHb: "",
-    symptomsBetweenTransfusions: "",
-    poorGrowthHistory: false,
-    boneDeformities: false,
-    recurrentInfections: false,
-    organIssuesHistory: "",
-    
-    // Transfusion history
-    transfusionFrequencyPast6Months: "",
-    unitsPerSession: "",
-    usualTransfusionHbLevel: "",
-    recentIntervalChanges: "",
-    
-    // Iron overload
-    ironChelationTherapy: "",
-    chelationMedication: "",
-    chelationFrequency: "",
-    lastSerumFerritin: "",
-    lastLiverIronMeasurement: "",
-    adverseReactionsHistory: "",
-    
-    // Manual frequency
-    manualTransfusionFrequency: "",
+    dateOfBirth: patient?.dateOfBirth || "",
+    weight: patient?.weight || "",
+    diagnosis: patient?.diagnosis || "",
+    thalassemiaType: patient?.thalassemiaType || "",
+    recentPreTransfusionHb: patient?.recentPreTransfusionHb || "",
+    symptomsBetweenTransfusions: patient?.symptomsBetweenTransfusions || "",
+    poorGrowthHistory: patient?.poorGrowthHistory || false,
+    boneDeformities: patient?.boneDeformities || false,
+    recurrentInfections: patient?.recurrentInfections || false,
+    organIssuesHistory: patient?.organIssuesHistory || "",
+    transfusionFrequencyPast6Months: patient?.transfusionFrequencyPast6Months || "",
+    unitsPerSession: patient?.unitsPerSession || "",
+    usualTransfusionHbLevel: patient?.usualTransfusionHbLevel || "",
+    recentIntervalChanges: patient?.recentIntervalChanges || "",
+    ironChelationTherapy: patient?.ironChelationTherapy || "",
+    chelationMedication: patient?.chelationMedication || "",
+    chelationFrequency: patient?.chelationFrequency || "",
+    lastSerumFerritin: patient?.lastSerumFerritin || "",
+    lastLiverIronMeasurement: patient?.lastLiverIronMeasurement || "",
+    adverseReactionsHistory: patient?.adverseReactionsHistory || "",
+    manualTransfusionFrequency: patient?.manualTransfusionFrequency || "",
+    hemoglobinLevel: patient?.hemoglobinLevel || "",
+    ironLevels: patient?.ironLevels || "",
+    lastTransfusion: patient?.lastTransfusion || "",
+    totalTransfusions: patient?.totalTransfusions || "",
+    ferritinLevels: patient?.ferritinLevels || "",
+    bloodPressure: patient?.bloodPressure || "",
+    heartRate: patient?.heartRate || "",
   });
-
-  const [useManualFrequency, setUseManualFrequency] = useState(false);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -59,296 +56,375 @@ export function PatientDetailsForm({ onSubmit, loading }: PatientDetailsFormProp
   };
 
   return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader>
-        <CardTitle>Patient Medical Details</CardTitle>
-        <CardDescription>
-          Please provide your medical information to help us determine your transfusion frequency.
-          You can either fill out the detailed form or manually specify your frequency.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="manual-frequency"
-              checked={useManualFrequency}
-              onCheckedChange={setUseManualFrequency}
-            />
-            <Label htmlFor="manual-frequency">
-              I prefer to manually specify my transfusion frequency
-            </Label>
-          </div>
-        </div>
-
-        {useManualFrequency ? (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="manualFrequency">Transfusion Frequency</Label>
-              <Select 
-                value={formData.manualTransfusionFrequency} 
-                onValueChange={(value) => handleInputChange("manualTransfusionFrequency", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="every-2-weeks">Every 2 weeks</SelectItem>
-                  <SelectItem value="every-3-weeks">Every 3 weeks</SelectItem>
-                  <SelectItem value="every-4-weeks">Every 4 weeks</SelectItem>
-                  <SelectItem value="every-6-weeks">Every 6 weeks</SelectItem>
-                  <SelectItem value="every-8-weeks">Every 8 weeks</SelectItem>
-                  <SelectItem value="as-needed">As needed</SelectItem>
-                </SelectContent>
-              </Select>
+    <div className="max-w-4xl mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <User className="w-6 h-6 text-blue-600" />
+            <span>Complete Patient Medical Profile</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                <Badge variant="outline">1</Badge>
+                <span>Basic Information</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="weight">Weight (kg)</Label>
+                  <Input
+                    id="weight"
+                    type="text"
+                    value={formData.weight}
+                    onChange={(e) => handleInputChange("weight", e.target.value)}
+                    placeholder="e.g., 65"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="diagnosis">Primary Diagnosis</Label>
+                  <Input
+                    id="diagnosis"
+                    type="text"
+                    value={formData.diagnosis}
+                    onChange={(e) => handleInputChange("diagnosis", e.target.value)}
+                    placeholder="e.g., Beta Thalassemia Major"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="thalassemiaType">Thalassemia Type</Label>
+                  <Input
+                    id="thalassemiaType"
+                    type="text"
+                    value={formData.thalassemiaType}
+                    onChange={(e) => handleInputChange("thalassemiaType", e.target.value)}
+                    placeholder="e.g., Beta Thalassemia Major"
+                  />
+                </div>
+              </div>
             </div>
-            <Button onClick={handleSubmit} disabled={loading} className="w-full">
-              {loading ? "Completing Registration..." : "Complete Registration"}
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <Tabs defaultValue="demographics" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="demographics">Demographics</TabsTrigger>
-                <TabsTrigger value="clinical">Clinical Status</TabsTrigger>
-                <TabsTrigger value="transfusion">Transfusion History</TabsTrigger>
-                <TabsTrigger value="chelation">Iron & Chelation</TabsTrigger>
-              </TabsList>
 
-              <TabsContent value="demographics" className="space-y-4 mt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                    <Input
-                      id="dateOfBirth"
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="weight">Current Weight (kg)</Label>
-                    <Input
-                      id="weight"
-                      placeholder="e.g., 65"
-                      value={formData.weight}
-                      onChange={(e) => handleInputChange("weight", e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="thalassemiaType">Type of Thalassemia</Label>
-                  <Select 
-                    value={formData.thalassemiaType} 
-                    onValueChange={(value) => handleInputChange("thalassemiaType", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select thalassemia type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beta-thalassemia-major">β-thalassemia major</SelectItem>
-                      <SelectItem value="hbe-beta-thalassemia">HbE β-thalassemia</SelectItem>
-                      <SelectItem value="thalassemia-intermedia">Thalassemia intermedia</SelectItem>
-                      <SelectItem value="alpha-thalassemia">α-thalassemia</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TabsContent>
+            <Separator />
 
-              <TabsContent value="clinical" className="space-y-4 mt-6">
+            {/* Clinical Status */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                <Badge variant="outline">2</Badge>
+                <span>Current Clinical Status</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="recentPreTransfusionHb">Most Recent Pre-transfusion Hemoglobin Level (g/dL)</Label>
+                  <Label htmlFor="recentPreTransfusionHb">Recent Pre-transfusion Hb</Label>
                   <Input
                     id="recentPreTransfusionHb"
-                    placeholder="e.g., 8.5"
+                    type="text"
                     value={formData.recentPreTransfusionHb}
                     onChange={(e) => handleInputChange("recentPreTransfusionHb", e.target.value)}
+                    placeholder="e.g., 8.5 g/dL"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="symptomsBetweenTransfusions">Symptoms Between Transfusions</Label>
-                  <Textarea
-                    id="symptomsBetweenTransfusions"
-                    placeholder="Describe any fatigue, shortness of breath, pallor, etc."
-                    value={formData.symptomsBetweenTransfusions}
-                    onChange={(e) => handleInputChange("symptomsBetweenTransfusions", e.target.value)}
+                  <Label htmlFor="hemoglobinLevel">Current Hemoglobin Level</Label>
+                  <Input
+                    id="hemoglobinLevel"
+                    type="text"
+                    value={formData.hemoglobinLevel}
+                    onChange={(e) => handleInputChange("hemoglobinLevel", e.target.value)}
+                    placeholder="e.g., 9.2 g/dL"
                   />
-                </div>
-                <div className="space-y-3">
-                  <Label>Medical History (check all that apply)</Label>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="poorGrowth"
-                      checked={formData.poorGrowthHistory}
-                      onCheckedChange={(checked) => handleInputChange("poorGrowthHistory", checked)}
-                    />
-                    <Label htmlFor="poorGrowth">Poor growth (for children)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="boneDeformities"
-                      checked={formData.boneDeformities}
-                      onCheckedChange={(checked) => handleInputChange("boneDeformities", checked)}
-                    />
-                    <Label htmlFor="boneDeformities">Bone deformities</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="recurrentInfections"
-                      checked={formData.recurrentInfections}
-                      onCheckedChange={(checked) => handleInputChange("recurrentInfections", checked)}
-                    />
-                    <Label htmlFor="recurrentInfections">Recurrent infections</Label>
-                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="organIssuesHistory">History of Organ Issues</Label>
-                  <Textarea
-                    id="organIssuesHistory"
-                    placeholder="Any cardiac, liver, spleen issues, etc."
-                    value={formData.organIssuesHistory}
-                    onChange={(e) => handleInputChange("organIssuesHistory", e.target.value)}
+                  <Label htmlFor="ironLevels">Iron Levels</Label>
+                  <Input
+                    id="ironLevels"
+                    type="text"
+                    value={formData.ironLevels}
+                    onChange={(e) => handleInputChange("ironLevels", e.target.value)}
+                    placeholder="e.g., 150 µg/dL"
                   />
                 </div>
-              </TabsContent>
+                <div>
+                  <Label htmlFor="ferritinLevels">Ferritin Levels</Label>
+                  <Input
+                    id="ferritinLevels"
+                    type="text"
+                    value={formData.ferritinLevels}
+                    onChange={(e) => handleInputChange("ferritinLevels", e.target.value)}
+                    placeholder="e.g., 2500 ng/mL"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="bloodPressure">Blood Pressure</Label>
+                  <Input
+                    id="bloodPressure"
+                    type="text"
+                    value={formData.bloodPressure}
+                    onChange={(e) => handleInputChange("bloodPressure", e.target.value)}
+                    placeholder="e.g., 120/80"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="heartRate">Heart Rate (bpm)</Label>
+                  <Input
+                    id="heartRate"
+                    type="number"
+                    value={formData.heartRate}
+                    onChange={(e) => handleInputChange("heartRate", parseInt(e.target.value) || 0)}
+                    placeholder="e.g., 72"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="totalTransfusions">Total Transfusions</Label>
+                  <Input
+                    id="totalTransfusions"
+                    type="number"
+                    value={formData.totalTransfusions}
+                    onChange={(e) => handleInputChange("totalTransfusions", parseInt(e.target.value) || 0)}
+                    placeholder="e.g., 45"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="symptomsBetweenTransfusions">Symptoms Between Transfusions</Label>
+                <Textarea
+                  id="symptomsBetweenTransfusions"
+                  value={formData.symptomsBetweenTransfusions}
+                  onChange={(e) => handleInputChange("symptomsBetweenTransfusions", e.target.value)}
+                  placeholder="Describe any symptoms experienced between transfusions..."
+                  rows={3}
+                />
+              </div>
+            </div>
 
-              <TabsContent value="transfusion" className="space-y-4 mt-6">
-                <div>
-                  <Label htmlFor="transfusionFrequencyPast6Months">Transfusion Frequency in Past 6-12 Months</Label>
-                  <Select 
-                    value={formData.transfusionFrequencyPast6Months} 
-                    onValueChange={(value) => handleInputChange("transfusionFrequencyPast6Months", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="every-2-weeks">Every 2 weeks</SelectItem>
-                      <SelectItem value="every-3-weeks">Every 3 weeks</SelectItem>
-                      <SelectItem value="every-4-weeks">Every 4 weeks</SelectItem>
-                      <SelectItem value="every-6-weeks">Every 6 weeks</SelectItem>
-                      <SelectItem value="irregular">Irregular</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="unitsPerSession">Units of Blood per Session</Label>
-                    <Input
-                      id="unitsPerSession"
-                      type="number"
-                      placeholder="e.g., 2"
-                      value={formData.unitsPerSession}
-                      onChange={(e) => handleInputChange("unitsPerSession", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="usualTransfusionHbLevel">Usual Transfusion Hemoglobin Level (g/dL)</Label>
-                    <Input
-                      id="usualTransfusionHbLevel"
-                      placeholder="e.g., 8.0"
-                      value={formData.usualTransfusionHbLevel}
-                      onChange={(e) => handleInputChange("usualTransfusionHbLevel", e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="recentIntervalChanges">Recent Changes in Transfusion Interval</Label>
-                  <Textarea
-                    id="recentIntervalChanges"
-                    placeholder="Has your transfusion interval changed recently? If so, why?"
-                    value={formData.recentIntervalChanges}
-                    onChange={(e) => handleInputChange("recentIntervalChanges", e.target.value)}
-                  />
-                </div>
-              </TabsContent>
+            <Separator />
 
-              <TabsContent value="chelation" className="space-y-4 mt-6">
-                <div>
-                  <Label htmlFor="ironChelationTherapy">Are you currently on iron chelation therapy?</Label>
-                  <Select 
-                    value={formData.ironChelationTherapy} 
-                    onValueChange={(value) => handleInputChange("ironChelationTherapy", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
-                      <SelectItem value="sometimes">Sometimes</SelectItem>
-                    </SelectContent>
-                  </Select>
+            {/* Medical History */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                <Badge variant="outline">3</Badge>
+                <span>Medical History</span>
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="poorGrowthHistory"
+                    checked={formData.poorGrowthHistory}
+                    onChange={(e) => handleInputChange("poorGrowthHistory", e.target.checked)}
+                    className="rounded"
+                  />
+                  <Label htmlFor="poorGrowthHistory">History of Poor Growth</Label>
                 </div>
-                {formData.ironChelationTherapy === "yes" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="chelationMedication">Chelation Medication</Label>
-                      <Input
-                        id="chelationMedication"
-                        placeholder="e.g., Deferasirox, Deferoxamine"
-                        value={formData.chelationMedication}
-                        onChange={(e) => handleInputChange("chelationMedication", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="chelationFrequency">How regularly do you take it?</Label>
-                      <Select 
-                        value={formData.chelationFrequency} 
-                        onValueChange={(value) => handleInputChange("chelationFrequency", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="most-days">Most days</SelectItem>
-                          <SelectItem value="few-times-week">Few times a week</SelectItem>
-                          <SelectItem value="irregularly">Irregularly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="lastSerumFerritin">Last Serum Ferritin Level (ng/mL)</Label>
-                    <Input
-                      id="lastSerumFerritin"
-                      placeholder="e.g., 2500"
-                      value={formData.lastSerumFerritin}
-                      onChange={(e) => handleInputChange("lastSerumFerritin", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastLiverIronMeasurement">Last Liver Iron Measurement</Label>
-                    <Input
-                      id="lastLiverIronMeasurement"
-                      placeholder="If available"
-                      value={formData.lastLiverIronMeasurement}
-                      onChange={(e) => handleInputChange("lastLiverIronMeasurement", e.target.value)}
-                    />
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="boneDeformities"
+                    checked={formData.boneDeformities}
+                    onChange={(e) => handleInputChange("boneDeformities", e.target.checked)}
+                    className="rounded"
+                  />
+                  <Label htmlFor="boneDeformities">Bone Deformities</Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="recurrentInfections"
+                    checked={formData.recurrentInfections}
+                    onChange={(e) => handleInputChange("recurrentInfections", e.target.checked)}
+                    className="rounded"
+                  />
+                  <Label htmlFor="recurrentInfections">Recurrent Infections</Label>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="organIssuesHistory">Organ Issues History</Label>
+                <Textarea
+                  id="organIssuesHistory"
+                  value={formData.organIssuesHistory}
+                  onChange={(e) => handleInputChange("organIssuesHistory", e.target.value)}
+                  placeholder="Describe any organ-related complications..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Transfusion History */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                <Badge variant="outline">4</Badge>
+                <span>Transfusion Details</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="adverseReactionsHistory">Adverse Reactions History</Label>
-                  <Textarea
-                    id="adverseReactionsHistory"
-                    placeholder="Any adverse reactions to transfusions or chelation therapy"
-                    value={formData.adverseReactionsHistory}
-                    onChange={(e) => handleInputChange("adverseReactionsHistory", e.target.value)}
+                  <Label htmlFor="transfusionFrequencyPast6Months">Transfusion Frequency (Past 6 Months)</Label>
+                  <Input
+                    id="transfusionFrequencyPast6Months"
+                    type="text"
+                    value={formData.transfusionFrequencyPast6Months}
+                    onChange={(e) => handleInputChange("transfusionFrequencyPast6Months", e.target.value)}
+                    placeholder="e.g., Every 3 weeks"
                   />
                 </div>
-                <Button type="submit" disabled={loading} className="w-full mt-6">
-                  {loading ? "Completing Registration..." : "Complete Registration"}
-                </Button>
-              </TabsContent>
-            </Tabs>
+                <div>
+                  <Label htmlFor="unitsPerSession">Units per Session</Label>
+                  <Input
+                    id="unitsPerSession"
+                    type="number"
+                    value={formData.unitsPerSession}
+                    onChange={(e) => handleInputChange("unitsPerSession", parseInt(e.target.value) || 0)}
+                    placeholder="e.g., 2"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="usualTransfusionHbLevel">Usual Transfusion Hb Level</Label>
+                  <Input
+                    id="usualTransfusionHbLevel"
+                    type="text"
+                    value={formData.usualTransfusionHbLevel}
+                    onChange={(e) => handleInputChange("usualTransfusionHbLevel", e.target.value)}
+                    placeholder="e.g., 11.5 g/dL"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastTransfusion">Last Transfusion Date</Label>
+                  <Input
+                    id="lastTransfusion"
+                    type="date"
+                    value={formData.lastTransfusion}
+                    onChange={(e) => handleInputChange("lastTransfusion", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="recentIntervalChanges">Recent Interval Changes</Label>
+                <Textarea
+                  id="recentIntervalChanges"
+                  value={formData.recentIntervalChanges}
+                  onChange={(e) => handleInputChange("recentIntervalChanges", e.target.value)}
+                  placeholder="Describe any recent changes in transfusion intervals..."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Iron Chelation */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                <Badge variant="outline">5</Badge>
+                <span>Iron Chelation Therapy</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="ironChelationTherapy">Iron Chelation Therapy Status</Label>
+                  <Input
+                    id="ironChelationTherapy"
+                    type="text"
+                    value={formData.ironChelationTherapy}
+                    onChange={(e) => handleInputChange("ironChelationTherapy", e.target.value)}
+                    placeholder="e.g., Active, Suspended, Not Started"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="chelationMedication">Chelation Medication</Label>
+                  <Input
+                    id="chelationMedication"
+                    type="text"
+                    value={formData.chelationMedication}
+                    onChange={(e) => handleInputChange("chelationMedication", e.target.value)}
+                    placeholder="e.g., Deferasirox, Deferoxamine"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="chelationFrequency">Chelation Frequency</Label>
+                  <Input
+                    id="chelationFrequency"
+                    type="text"
+                    value={formData.chelationFrequency}
+                    onChange={(e) => handleInputChange("chelationFrequency", e.target.value)}
+                    placeholder="e.g., Daily, 3 times per week"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastSerumFerritin">Last Serum Ferritin</Label>
+                  <Input
+                    id="lastSerumFerritin"
+                    type="text"
+                    value={formData.lastSerumFerritin}
+                    onChange={(e) => handleInputChange("lastSerumFerritin", e.target.value)}
+                    placeholder="e.g., 2500 ng/mL"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="lastLiverIronMeasurement">Last Liver Iron Measurement</Label>
+                <Input
+                  id="lastLiverIronMeasurement"
+                  type="text"
+                  value={formData.lastLiverIronMeasurement}
+                  onChange={(e) => handleInputChange("lastLiverIronMeasurement", e.target.value)}
+                  placeholder="e.g., MRI T2* or LIC value"
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Additional Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                <Badge variant="outline">6</Badge>
+                <span>Additional Information</span>
+              </h3>
+              <div>
+                <Label htmlFor="adverseReactionsHistory">Adverse Reactions History</Label>
+                <Textarea
+                  id="adverseReactionsHistory"
+                  value={formData.adverseReactionsHistory}
+                  onChange={(e) => handleInputChange("adverseReactionsHistory", e.target.value)}
+                  placeholder="Describe any adverse reactions to transfusions or medications..."
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="manualTransfusionFrequency">Manual Transfusion Frequency</Label>
+                <Input
+                  id="manualTransfusionFrequency"
+                  type="text"
+                  value={formData.manualTransfusionFrequency}
+                  onChange={(e) => handleInputChange("manualTransfusionFrequency", e.target.value)}
+                  placeholder="e.g., Every 21 days"
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-4 pt-6">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" className="flex items-center space-x-2">
+                <Save className="w-4 h-4" />
+                <span>Save Patient Details</span>
+              </Button>
+            </div>
           </form>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
