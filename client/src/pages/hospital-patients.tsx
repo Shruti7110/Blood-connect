@@ -141,8 +141,7 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-md"
               />
-              <Button onClick={() => setShowComprehensiveForm(true)}>
-                <FileText className="w-4 h-4 mr-2" />
+              <Button onClick={() => setShowComprehensiveForm(true)}>            
                 Add All Patient Details
               </Button>
             </div>
@@ -366,7 +365,6 @@ export default function HospitalPatients({ user }: HospitalPatientsProps) {
                 Fill in all patient details for new or existing patients.
               </p>
             </DialogHeader>
-            <PatientDetailsForm />
           </DialogContent>
         </Dialog>
       </div>
