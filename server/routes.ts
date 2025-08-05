@@ -25,6 +25,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Registration request body:", JSON.stringify(req.body, null, 2));
 
+      // Handle healthcare providers without blood_group
+      if (req.body.role === 'healthcare_provider' && !req.body.blood_group) {
+        req.body.blood_group = 'O+'; // Set a default for validation, but won't be used
+      }
+
       const userData = insertUserSchema.parse(req.body);
       console.log("Parsed user data:", JSON.stringify(userData, null, 2));
 
@@ -39,13 +44,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create role-specific profile
       if (user.role === "patient") {
-        // Ensure blood_group is handled correctly during patient creation
-        await storage.createPatient({ userId: user.id, blood_group: userData.blood_group });
+        await storage.createPatient({ 
+          userId: user.id, 
+          blood_group: userData.blood_group 
+        });
       } else if (user.role === "donor") {
-        // Ensure blood_group is handled correctly during donor creation
-        await storage.createDonor({ userId: user.id, blood_group: userData.blood_group });
+        await storage.createDonor({ 
+          userId: user.id, 
+          blood_group: userData.blood_group 
+        });
       } else if (user.role === "healthcare_provider") {
-        await storage.createHealthcareProvider({ userId: user.id });
+        await storage.createHealthcareProvider({ 
+          userId: user.id,
+          hospitalName: userData.name // Use the name as hospital name
+        });
       }
 
       res.status(201).json({ user: { ...user, password: undefined } });

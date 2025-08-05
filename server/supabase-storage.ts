@@ -115,14 +115,28 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createPatient(patient: InsertPatient): Promise<Patient> {
+    // Map camelCase to snake_case for database
+    const dbPatient = {
+      user_id: patient.userId,
+      blood_group: patient.blood_group || null
+    };
+
     const { data, error } = await supabase
       .from('patients')
-      .insert(patient)
+      .insert(dbPatient)
       .select()
       .single();
 
-    if (error || !data) throw new Error('Failed to create patient');
-    return data;
+    if (error || !data) {
+      console.error('Supabase createPatient error:', error);
+      throw new Error(`Failed to create patient: ${error?.message || 'Unknown error'}`);
+    }
+
+    // Map back to camelCase
+    return {
+      ...data,
+      userId: data.user_id
+    };
   }
 
   async updatePatient(id: string, patient: Partial<Patient>): Promise<Patient | undefined> {
@@ -237,14 +251,35 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createDonor(donor: InsertDonor): Promise<Donor> {
+    // Map camelCase to snake_case for database
+    const dbDonor = {
+      user_id: donor.userId,
+      blood_group: donor.blood_group || null,
+      eligibility_status: donor.eligibilityStatus || true,
+      available_for_donation: donor.availableForDonation || true,
+      total_donations: donor.totalDonations || 0
+    };
+
     const { data, error } = await supabase
       .from('donors')
-      .insert(donor)
+      .insert(dbDonor)
       .select()
       .single();
 
-    if (error || !data) throw new Error('Failed to create donor');
-    return data;
+    if (error || !data) {
+      console.error('Supabase createDonor error:', error);
+      throw new Error(`Failed to create donor: ${error?.message || 'Unknown error'}`);
+    }
+
+    // Map back to camelCase
+    return {
+      ...data,
+      userId: data.user_id,
+      eligibilityStatus: data.eligibility_status,
+      availableForDonation: data.available_for_donation,
+      totalDonations: data.total_donations,
+      lastDonation: data.last_donation
+    };
   }
 
   async updateDonor(id: string, donor: Partial<Donor>): Promise<Donor | undefined> {
@@ -344,14 +379,32 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createHealthcareProvider(provider: InsertHealthcareProvider): Promise<HealthcareProvider> {
+    // Map camelCase to snake_case for database
+    const dbProvider = {
+      user_id: provider.userId,
+      hospital_name: provider.hospitalName || null,
+      department: provider.department || null,
+      license_number: provider.licenseNumber || null
+    };
+
     const { data, error } = await supabase
       .from('healthcare_providers')
-      .insert(provider)
+      .insert(dbProvider)
       .select()
       .single();
 
-    if (error || !data) throw new Error('Failed to create healthcare provider');
-    return data;
+    if (error || !data) {
+      console.error('Supabase createHealthcareProvider error:', error);
+      throw new Error(`Failed to create healthcare provider: ${error?.message || 'Unknown error'}`);
+    }
+
+    // Map back to camelCase
+    return {
+      ...data,
+      userId: data.user_id,
+      hospitalName: data.hospital_name,
+      licenseNumber: data.license_number
+    };
   }
 
   async updateHealthcareProvider(id: string, provider: Partial<HealthcareProvider>): Promise<HealthcareProvider | undefined> {

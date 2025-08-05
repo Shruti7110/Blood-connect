@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Calendar, Users, Droplet, TrendingUp } from "lucide-react";
 import { type AuthUser } from "@/lib/auth";
+import { apiRequest } from "@/lib/queryClient";
 
 interface HospitalDashboardProps {
   user: AuthUser;
@@ -21,16 +22,6 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     enabled: !!provider?.id,
   });
 
-  const { data: upcomingTransfusions = [] } = useQuery({
-    queryKey: ['transfusions', 'upcoming'],
-    queryFn: () => apiRequest('GET', '/api/transfusions/upcoming'),
-  });
-
-  const { data: upcomingDonations = [] } = useQuery({
-    queryKey: ['donations', 'upcoming'],
-    queryFn: () => apiRequest('GET', '/api/donations/upcoming'),
-  });
-
   const { data: patients } = useQuery<any[]>({
     queryKey: ['/api/patients'],
     enabled: !!provider,
@@ -41,50 +32,12 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     enabled: !!provider,
   });
 
-  // Debug log to see what data we're getting
-  console.log('Hospital Dashboard Data:', {
-    provider,
-    patients,
-    donors,
-    patientsCount: patients?.length,
-    donorsCount: donors?.length
-  });
-
-  // Filter appointments for today at this hospital
-  const hospitalName = provider?.hospital_name || provider?.hospitalName;
-  const todayAppointments = upcomingTransfusions?.filter(t => {
-    const appointmentDate = new Date(t.scheduledDate || t.scheduled_date);
-    const today = new Date();
-
-    // Set both dates to start of day for accurate comparison
-    const appointmentDay = new Date(appointmentDate.getFullYear(), appointmentDate.getMonth(), appointmentDate.getDate());
-    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-    const isToday = appointmentDay.getTime() === todayDay.getTime();
-    const isAtThisHospital = hospitalName && t.location?.includes(hospitalName);
-
-    console.log('Checking appointment:', {
-      appointmentDate: appointmentDate.toISOString(),
-      appointmentDay: appointmentDay.toISOString(),
-      todayDay: todayDay.toISOString(),
-      isToday,
-      isAtThisHospital,
-      location: t.location,
-      hospitalName
-    });
-
-    return isToday && isAtThisHospital;
-  }) || [];
-
-  const patientAppointmentsToday = todayAppointments.filter(t => t.patient_id);
-  const donorAppointmentsToday = todayAppointments.filter(t => t.donor_id);
-
   // Calculate blood availability by type
   const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const bloodAvailability = bloodTypes.map(type => {
     // Count available donors of this blood type
     const availableDonors = donors?.filter(d => 
-      d.user?.bloodGroup === type && d.availableForDonation
+      d.user?.blood_group === type && d.availableForDonation
     )?.length || 0;
 
     // Calculate units (assuming 2 units per available donor)
@@ -99,10 +52,13 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
 
   // Find patients with low blood availability
   const lowStockPatients = patients?.filter(patient => {
-    const bloodType = patient.user?.bloodGroup;
+    const bloodType = patient.user?.blood_group;
     const availability = bloodAvailability.find(b => b.type === bloodType);
     return availability && availability.units < 5;
   }) || [];
+
+  // Get hospital name from provider data
+  const hospitalName = provider?.hospitalName || user.name;
 
   return (
     <div className="min-h-screen bg-background-alt">
@@ -110,7 +66,8 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Manipal Hospital, Whitefield</h1>          
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{hospitalName}</h1>
+          <p className="text-gray-600">Healthcare Provider Dashboard</p>
         </div>
 
         {/* Today's Appointments Summary */}
@@ -130,13 +87,40 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Donor Appointments Today</CardTitle>              
+              <CardTitle className="text-sm font-medium">Donor Appointments Today</CardTitle>
+              <Droplet className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {todayAppointmentsData?.donorAppointments?.length || 0}
               </div>
               <p className="text-xs text-muted-foreground">At your location today</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {patients?.length || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Registered patients</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Donors</CardTitle>
+              <Droplet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {donors?.length || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Registered donors</p>
             </CardContent>
           </Card>
         </div>
@@ -174,67 +158,6 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Upcoming Appointments */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-blue-500" />
-              <span>Upcoming Appointments</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {upcomingTransfusions && upcomingTransfusions.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {upcomingTransfusions.filter(t => {
-                  const appointmentDate = new Date(t.scheduledDate || t.scheduled_date);
-                  const now = new Date();
-                  const isAtThisHospital = hospitalName && t.location?.includes(hospitalName);
-                  const isUpcoming = appointmentDate >= now;
-                  return isAtThisHospital && isUpcoming;
-                }).map((appointment) => (
-                  <div key={appointment.id} className="p-4 border rounded-lg bg-blue-50 border-blue-200">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-blue-900">
-                          {appointment.patient?.user?.name || 'Patient Appointment'}
-                        </p>
-                        <p className="text-sm text-blue-700">
-                          {new Date(appointment.scheduledDate || appointment.scheduled_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-600">
-                        <strong>Location:</strong> {appointment.location}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <strong>Units Required:</strong> {appointment.unitsRequired || 2}
-                      </p>
-                      <Badge 
-                        variant={appointment.status === 'scheduled' ? 'default' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {appointment.status || 'Scheduled'}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-6">No upcoming appointments at this hospital</p>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Low Stock Notifications */}
         {lowStockPatients.length > 0 && (
           <Card>
@@ -250,11 +173,11 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
                   <div key={patient.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
                     <div>
                       <p className="font-medium">{patient.user?.name}</p>
-                      <p className="text-sm text-gray-600">Blood Type: {patient.user?.bloodGroup}</p>
+                      <p className="text-sm text-gray-600">Blood Type: {patient.user?.blood_group}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-red-600 font-medium">
-                        Only {bloodAvailability.find(b => b.type === patient.user?.bloodGroup)?.units || 0} units available
+                        Only {bloodAvailability.find(b => b.type === patient.user?.blood_group)?.units || 0} units available
                       </p>
                       <Badge variant="destructive" className="text-xs">
                         Critical

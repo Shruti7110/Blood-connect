@@ -205,9 +205,14 @@ export const emergencyRequests = pgTable("emergency_requests", {
 });
 
 // Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
+export const insertUserSchema = createInsertSchema(users, {
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(["patient", "donor", "healthcare_provider"]),
+  name: z.string().min(1),
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  blood_group: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]).optional(),
 });
 
 export const insertPatientSchema = createInsertSchema(patients).omit({
