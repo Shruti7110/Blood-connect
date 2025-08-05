@@ -81,23 +81,8 @@ export default function Login() {
                 <span className="text-primary hover:underline cursor-pointer">Sign up</span>
               </Link>
             </p>
-          </div>
-          <div className="mt-4 text-center">
-            <p className="text-xs text-gray-500">Demo accounts:</p>
-            <p className="text-xs text-gray-500">Patient: sarah.chen@example.com | hashed_password</p>
-            <p className="text-xs text-gray-500">Donor: michael.k@example.com | hashed_password</p>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <p className="text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link href="/register">
-              <span className="underline underline-offset-4 hover:text-primary cursor-pointer">
-                Sign up
-              </span>
-            </Link>
-          </p>
-        </CardFooter>
+          </div>          
+        </CardContent>        
       </Card>
     </div>
   );

@@ -866,7 +866,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const providerUser = await storage.getUser(provider.userId);
-      const providerLocation = providerUser?.location;
+      const providerLocation = providerUser?.name;
 
       if (!providerLocation) {
         return res.status(400).json({ message: "Provider location not found" });
