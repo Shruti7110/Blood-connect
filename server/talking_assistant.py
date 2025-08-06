@@ -60,7 +60,8 @@ class BloodDonationAssistant:
         3. Use user_id = '{self.user_id}' for user profile queries
         4. Never return data for other users
 
-        Be helpful, friendly, and always prioritize user privacy and data security."""
+        Be helpful, friendly, and always prioritize user privacy and data security.
+        Answer in plain text with bullets is reuired and not markdown."""
 
     def get_instructions_patient(self) -> str:
         """Instructions for patient role"""
@@ -97,7 +98,8 @@ class BloodDonationAssistant:
         3. Use user_id = '{self.user_id}' for user profile queries
         4. Never return data for other users
 
-        Be compassionate, informative, and always prioritize user privacy and medical confidentiality."""
+        Be compassionate, informative, and always prioritize user privacy and medical confidentiality.
+        Answer in plain text with bullets is reuired and not markdown."""
 
     def get_instructions_healthcare_provider(self) -> str:
         """Instructions for healthcare provider role"""
@@ -135,7 +137,8 @@ class BloodDonationAssistant:
         3. Only show data relevant to your facility
         4. Respect patient privacy - only access data as needed for care
 
-        Be professional, efficient, and maintain strict patient confidentiality."""
+        Be professional, efficient, and maintain strict patient confidentiality. 
+        Answer in plain text with bullets is reuired and not markdown. """
 
     def get_instructions(self) -> str:
         """Get role-specific instructions"""
@@ -164,9 +167,10 @@ class BloodDonationAssistant:
             # Create MCP server
             mcp_server = MCPServerStdio(
                 params={
-                    "command": "node",
+                    "command": "npx",
                     "args": [
-                        "/home/runner/.npm/_npx/7c5c5a84d1d5e9c7/node_modules/@supabase/mcp-server-supabase/dist/index.js",
+                        "-y",
+                        "@supabase/mcp-server-supabase@latest",
                         "--access-token", 
                         supabase_access_token,
                         "--project-ref",

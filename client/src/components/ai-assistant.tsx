@@ -180,8 +180,7 @@ export function AIAssistant({
             </Badge>
           </CardTitle>
         </CardHeader>
-
-        <CardContent className="flex-1 flex flex-col p-0">
+        <CardContent className={`flex-1 flex flex-col p-0 ${getRoleColor()}`}>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
             {messages.map((message) => (
               <div

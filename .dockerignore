@@ -1,0 +1,12 @@
+node_modules
+
+virt/
+venv/
+.git/
+.mypy_cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.log
+*.env
+.DS_Store

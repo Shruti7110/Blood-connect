@@ -28,7 +28,7 @@ export default function DonorAssistant({ user }: DonorAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hello! I'm your AI donor assistant. I can help you schedule donation appointments, view your donation history, check your eligibility status, manage your donor family connections, and answer questions about blood donation. How can I help you today?",
+      text: "Hello! I'm your AI assistant for the donors. I can help you schedule donation appointments, view your donation history, check your eligibility status, manage your donor family connections, and answer questions about blood donation. How can I help you today?",
       isBot: true,
       timestamp: new Date(),
     },

@@ -28,7 +28,7 @@ export default function ProviderAssistant({ user }: ProviderAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hello! I'm your AI healthcare assistant. I can help you manage patient appointments, view blood inventory reports, track donor schedules, analyze patient data, and assist with medical decision-making. How can I assist you today?",
+      text: "Hello! I'm your AI healthcare assistant. I can help you tell the upcoming patient appointments, view blood inventory reports, track donor schedules and analyze patient data. How can I assist you today?",
       isBot: true,
       timestamp: new Date(),
     },
