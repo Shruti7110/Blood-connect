@@ -42,7 +42,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
   const bloodAvailability = bloodTypes.map(type => {
     // Count available donors of this blood type
     const availableDonors = donors?.filter(d => 
-      d.user?.blood_group === type && d.availableForDonation
+      d.user?.bloodGroup === type && d.availableForDonation
     )?.length || 0;
 
     // Calculate units (assuming 2 units per available donor)
@@ -57,7 +57,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
 
   // Find patients with low blood availability
   const lowStockPatients = patients?.filter(patient => {
-    const bloodType = patient.user?.blood_group;
+    const bloodType = patient.user?.bloodGroup;
     const availability = bloodAvailability.find(b => b.type === bloodType);
     return availability && availability.units < 5;
   }) || [];
@@ -213,7 +213,6 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-red-600">
-                <AlertCircle className="w-5 h-5" />
                 <span>Low Blood Stock Alerts</span>
               </CardTitle>
             </CardHeader>
@@ -223,11 +222,11 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
                   <div key={patient.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
                     <div>
                       <p className="font-medium">{patient.user?.name}</p>
-                      <p className="text-sm text-gray-600">Blood Type: {patient.user?.blood_group}</p>
+                      <p className="text-sm text-gray-600">Blood Type: {patient.user?.bloodGroup}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-red-600 font-medium">
-                        Only {bloodAvailability.find(b => b.type === patient.user?.blood_group)?.units || 0} units available
+                        Only {bloodAvailability.find(b => b.type === patient.user?.bloodGroup)?.units || 0} units available
                       </p>
                       <Badge variant="destructive" className="text-xs">
                         Critical

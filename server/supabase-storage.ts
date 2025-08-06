@@ -486,8 +486,20 @@ export class SupabaseStorage implements IStorage {
       .select(`
         *,
         donors!inner (
-          *,
-          users!inner (*)
+          id,
+          user_id,
+          available_for_donation,
+          total_donations,
+          last_donation,
+          eligibility_status,
+          users!inner (
+            id,
+            name,
+            email,
+            phone,
+            location,
+            blood_group
+          )
         )
       `)
       .eq('patient_id', patientId)
@@ -497,6 +509,9 @@ export class SupabaseStorage implements IStorage {
       console.error('Error fetching donor family:', familyError);
       return [];
     }
+
+    // Debug: Log the raw data to see what we're getting
+    console.log("Raw family data from Supabase:", JSON.stringify(familyData, null, 2));
 
     // Return the data in the expected format
     return familyData.map((item: any) => ({

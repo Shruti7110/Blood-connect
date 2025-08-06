@@ -444,16 +444,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/donor-family/:patientId", async (req, res) => {
     try {
       const { patientId } = req.params;
-      const family = await storage.getDonorFamiliesByPatientId(patientId);
+      
+      // Use direct Supabase query instead of storage function
+      const { data: familyData, error: familyError } = await supabase
+        .from('donor_families')
+        .select(`
+          id,
+          donor_id,
+          patient_id,
+          assigned_at,
+          is_active,
+          donors!inner (
+            id,
+            user_id,
+            available_for_donation,
+            total_donations,
+            last_donation,
+            eligibility_status,
+            users!inner (
+              id,
+              name,
+              email,
+              phone,
+              location,
+              blood_group
+            )
+          )
+        `)
+        .eq('patient_id', patientId)
+        .eq('is_active', true);
 
-      console.log("Raw family data from storage:", JSON.stringify(family, null, 2));
+      if (familyError) {
+        console.error('Error fetching donor family:', familyError);
+        return res.status(500).json({ error: "Failed to fetch donor family" });
+      }
+
+      console.log("Raw family data from Supabase:", JSON.stringify(familyData, null, 2));
 
       // Transform the data to match what the frontend expects
-      const transformedFamily = family.map((item: any) => ({
+      const transformedFamily = (familyData || []).map((item: any) => ({
         id: item.id,
         donorId: item.donor_id,
         patientId: item.patient_id,
-        assignedAt: item.assigned_at || item.assigned_date,
+        assignedAt: item.assigned_at,
         isActive: item.is_active,
         // Map donor data to expected structure
         donor: {
@@ -469,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: item.donors?.users?.name,
           phone: item.donors?.users?.phone,
           location: item.donors?.users?.location,
-          blood_group: item.donors?.users?.blood_group
+          bloodGroup: item.donors?.users?.blood_group
         }
       }));
 
@@ -929,47 +962,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get donor family for a patient
-  app.get("/api/donor-family/:patientId", async (req, res) => {
-    try {
-      const { patientId } = req.params;
-      const donorFamily = await storage.getDonorFamiliesByPatientId(patientId);
 
-      if (!donorFamily || donorFamily.length === 0) {
-        return res.json({ family: [], availableUnits: 0 });
-      }
-
-      // Get full donor and user details for each family member
-      const familyWithDetails = await Promise.all(
-        donorFamily.map(async (member: any) => {
-          const donor = await storage.getDonor(member.donorId);
-          const user = donor ? await storage.getUserById(donor.userId) : null;
-
-          return {
-            ...member,
-            donor,
-            user
-          };
-        })
-      );
-
-      // Count available units from active, available donors
-      const availableUnits = familyWithDetails.reduce((total, member) => {
-        if (member.isActive && member.donor?.availableForDonation) {
-          return total + 2; // Each donor can provide 2 units
-        }
-        return total;
-      }, 0);
-
-      res.json({
-        family: familyWithDetails,
-        availableUnits
-      });
-    } catch (error) {
-      console.error("Error fetching donor family:", error);
-      res.status(500).json({ error: "Failed to fetch donor family" });
-    }
-  });
 
   // Get upcoming patient appointments for healthcare provider
   app.get("/api/providers/:providerId/patient-appointments", async (req, res) => {

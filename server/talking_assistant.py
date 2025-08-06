@@ -32,6 +32,7 @@ class BloodDonationAssistant:
         today_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         return f"""You are a helpful assistant who uses Supabase database to store and retrieve information.
+        Answer as plain text.
         You are doing tasks on behalf of {self.user_name} (Email: {self.user_email}), who is a DONOR.
         User ID: {self.user_id}
         Donor ID: {self.donor_id}
